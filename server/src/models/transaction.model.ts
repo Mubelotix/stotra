@@ -23,7 +23,7 @@ export const TransactionSchema = new Schema<ITransaction>({
 	quantity: {
 		type: Number,
 		required: true,
-		min: 1, // Minimum of 1 share
+		min: 0.000000001, // The quantity should not be negative
 	},
 	type: {
 		type: String,

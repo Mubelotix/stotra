@@ -15,7 +15,7 @@ import {
 	useToast,
 } from "@chakra-ui/react";
 
-import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import accounts from "../services/accounts.service";

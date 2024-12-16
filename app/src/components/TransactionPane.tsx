@@ -19,6 +19,7 @@ import {
 	TabPanel,
 	Button,
 	Center,
+	Switch,
 } from "@chakra-ui/react";
 import { useLocation } from "react-router-dom";
 
@@ -28,10 +29,11 @@ const formatter = new Intl.NumberFormat("en-US", {
 });
 
 function TransactionPane(props: { symbol: string; price: number }) {
-	const [shares, setShares] = useState(1);
+	const [count, setCount] = useState(1);
 	const [buyingPower, setBuyingPower] = useState(0);
 	const [availableShares, setAvailableShares] = useState(0);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isByValue, setIsByValue] = useState(false);
 
 	const location = useLocation();
 
@@ -96,35 +98,68 @@ function TransactionPane(props: { symbol: string; price: number }) {
 				</TabList>
 
 				<Stack p="5">
-					<HStack>
-						<Text>Shares</Text>
-						<Spacer />
-						<NumberInput
-							defaultValue={1}
-							min={1}
-							width="20"
-							onChange={(e) => setShares(parseInt(e))}
-						>
-							<NumberInputField />
-							<NumberInputStepper>
-								<NumberIncrementStepper />
-								<NumberDecrementStepper />
-							</NumberInputStepper>
-						</NumberInput>
-					</HStack>
-					<HStack>
-						<Text>Current Price</Text>
-						<Spacer />
-						<Text>{formatter.format(props.price)}</Text>
-					</HStack>
+				<HStack>
+					<Text>Trade by Value</Text>
 					<Spacer />
-					<Divider />
+					<Switch isChecked={isByValue} onChange={() => setIsByValue(!isByValue)}>
+					</Switch>
+				</HStack>
+
+				{isByValue ? (
+					<HStack>
+					<Text>Value</Text>
 					<Spacer />
-					<HStack fontWeight="bold">
-						<Text>Estimated Total</Text>
-						<Spacer />
-						<Text>{formatter.format(props.price * shares)}</Text>
+					<NumberInput
+						defaultValue={count}
+						min={0.01}
+						width="20"
+						onChange={(e) => setCount(parseFloat(e))}
+					>
+						<NumberInputField />
+						<NumberInputStepper>
+						<NumberIncrementStepper />
+						<NumberDecrementStepper />
+						</NumberInputStepper>
+					</NumberInput>
 					</HStack>
+				) : (
+					<HStack>
+					<Text>Shares</Text>
+					<Spacer />
+					<NumberInput
+						defaultValue={count}
+						min={0.000000001}
+						width="20"
+						onChange={(e) => setCount(parseInt(e))}
+					>
+						<NumberInputField />
+						<NumberInputStepper>
+						<NumberIncrementStepper />
+						<NumberDecrementStepper />
+						</NumberInputStepper>
+					</NumberInput>
+					</HStack>
+				)}
+
+				<HStack>
+					<Text>Current Price</Text>
+					<Spacer />
+					<Text>{formatter.format(props.price)}</Text>
+				</HStack>
+
+				<Spacer />
+				<Divider />
+				<Spacer />
+
+				<HStack fontWeight="bold">
+					<Text>Estimated Total</Text>
+					<Spacer />
+					<Text>
+					{isByValue
+						? formatter.format(count)
+						: formatter.format(props.price * count)}
+					</Text>
+				</HStack>
 				</Stack>
 
 				<TabPanels>
@@ -132,7 +167,7 @@ function TransactionPane(props: { symbol: string; price: number }) {
 						<Button
 							size="lg"
 							width="100%"
-							onClick={() => submitTransaction(props.symbol!, shares, true)}
+							onClick={() => submitTransaction(props.symbol!, isByValue ? count / props.price : count, true)}
 							{...(isLoading ? { isLoading: true } : {})}
 						>
 							Buy
@@ -147,7 +182,7 @@ function TransactionPane(props: { symbol: string; price: number }) {
 						<Button
 							size="lg"
 							width="100%"
-							onClick={() => submitTransaction(props.symbol!, shares, false)}
+							onClick={() => submitTransaction(props.symbol!, isByValue ? count / props.price : count, false)}
 							{...(isLoading ? { isLoading: true } : {})}
 						>
 							Sell

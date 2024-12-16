@@ -1,3 +1,12 @@
+# FORK NOTICE
+
+This is a fork of the original project. The following changes have been made:
+
+- Updated dependencies to fix breaking changes in underlying APIs
+- Simplified development workflow by adding a `docker-compose.yml` file
+- Removed turnstile entirely
+- Replaced the man-made authentication system with proxy-provided authentication
+
 <div align="center">
   <a href="https://github.com/github_username/repo_name">
     <img src="./assets/logo.png" alt="Logo" width="80" height="80">

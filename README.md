@@ -5,6 +5,7 @@ This is a fork of the original project. The following changes have been made:
 - Updated dependencies to fix breaking changes in underlying APIs
 - Simplified development workflow by adding a `docker-compose.yml` file
 - Removed turnstile entirely
+- Made it possible to buy fractional shares
 - Replaced the man-made authentication system with proxy-provided authentication
 
 <div align="center">

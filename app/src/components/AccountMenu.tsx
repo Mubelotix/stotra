@@ -1,18 +1,17 @@
-import React, { useState, useEffect } from "react";
-import tokens from "../services/tokens.service";
+import React, { useEffect, useState } from "react";
 import { ChevronDownIcon, UnlockIcon } from "@chakra-ui/icons";
 import { Button, Menu, MenuButton, MenuList, MenuItem } from "@chakra-ui/react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
+import accounts from "../services/accounts.service";
 
 function AccountMenu() {
-	const location = useLocation();
-
-	const [username, setUsername] = useState(tokens.getUsername());
+	const [username, setUsername] = useState<string>("loading...");
 
 	useEffect(() => {
-		// Update username when auth.username changes
-		setUsername(tokens.getUsername());
-	}, [location.pathname]);
+		accounts.getUsername().then((gotUsername) => {
+			setUsername(gotUsername);
+		});
+	}, []);
 
 	return (
 		<>
@@ -33,9 +32,7 @@ function AccountMenu() {
 							mx="2"
 							width="auto"
 							onClick={() => {
-								window.location.reload();
-								tokens.clearToken();
-								setUsername("");
+								window.location.href = "/api/logout";
 							}}
 						>
 							Logout

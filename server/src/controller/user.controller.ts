@@ -29,6 +29,19 @@ const getHoldings = (req: Request, res: Response) => {
 		});
 };
 
+const getUsername = (req: Request, res: Response) => {
+	/* 
+	#swagger.tags = ['User Data']
+	*/
+	User.findById(req.body.userId)
+		.then((user) => {
+			res.status(200).json({ username: user!.username });
+		})
+		.catch((err: { message: any }) => {
+			res.status(500).send({ message: err.message });
+		});
+}
+
 const getPortfolio = async (req: Request, res: Response) => {
 	/* 
 	#swagger.tags = ['User Data']
@@ -160,6 +173,7 @@ const removeFromWatchlist = (req: Request, res: Response) => {
 export default {
 	getLedger,
 	getHoldings,
+	getUsername,
 	getPortfolio,
 	// Watchlist routes
 	getWatchlist,

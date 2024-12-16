@@ -56,16 +56,6 @@ The design was inspired by [Robinhood](https://robinhood.com/) and [this Dribbbl
 
 The accent color defaults to Chakra's "Cyan 500" (`#00B5D8`), which can be changed in the app to any of [Chakra's sleek colors](https://chakra-ui.com/docs/styled-system/theme#colors). Using the toggle in the top right, one can switch between light and dark mode, as shown in the "Sign up" screenshot above.
 
-## Security 🛡️
-
-Stotra utilizes a robust and custom-built authentication system designed to ensure the security of user data and access to its services. Developed using TypeScript, the system incorporates features for user sign-up, login, and verification. To authenticate users, Stotra employs JSON Web Tokens (JWT), issuing a JWT to users upon successful login, which is then used for identity and permission verification in subsequent requests.
-
-### Known Limitations
-
-- Users were authenticated with access tokens but not refresh tokens. Adding this additional check may verify users further and could allow storing the login in React's state. Currently, JWT tokens are stored in localStorage to allow access by React, something not possible with `httpOnly` Cookies. This is vulnerable to DOM-based XSS attacks just as state-stored tokens would be, albeit state-stored tokens are not as simple to access as localStorage ones.
-- The system does not offer a password reset feature. This would most likely require an email sending service and for the sake of simplicity, I left it out in this project. For a production-level deployment, this is definitely something to add.
-- Two-factor authentication is not included in the current security model. This is relatively minor for a stock trading _simulator_ but would be possible to implement with [otpauth](https://www.npmjs.com/package/otpauth).
-
 ## Architecture 🏗️
 
 Stotra uses a microservices architecture, with separate services for the frontend and backend. The two services are stored in separate directories within this monorepo and are meant to be run simultaneously on different ports of the host. The frontend is built with React which interfaces with the Node.js/Express backend over a Restful API. The backend sends to and reads from the MongoDB database (run on MongoDB Atlas for the demo version). The project is hosted on AWS, with Amplify for the frontend and Elastic Cloud Compute for the backend.
@@ -108,7 +98,8 @@ $ docker compose up -d
 
 ```py
 STOTRA_MONGODB_URI=mongodb://devuser:devpassword@127.0.0.1:27017/users?authSource=admin # example
-STOTRA_JWT_SECRET=<random string of characters>
+STOTRA_USERNAME_HEADER=x-username
+STOTRA_STARTING_CASH=100000
 # Optional: (for real-time news and stock data)
 STOTRA_NEWSFILTER_API=<api key for news descriptions>
 STOTRA_ALPHAVANTAGE_API=<api key for real-time stock data>
@@ -147,7 +138,7 @@ Connected to Database
 ## Technologies Used 💻
 
 - **Frontend:** React, TypeScript Chakra UI, Axios, Highcharts
-- **Backend:** Node.js, Express, MongoDB, Mongoose, JWT
+- **Backend:** Node.js, Express, MongoDB, Mongoose
 
 ## Author
 

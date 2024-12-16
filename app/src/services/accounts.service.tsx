@@ -1,6 +1,5 @@
 import { Position } from "../App";
 import api from "./api.service";
-import tokens from "./tokens.service";
 
 function makeTransaction(
 	symbol: string,
@@ -43,6 +42,21 @@ function getWatchlist(raw: boolean): Promise<any[]> {
 		})
 		.then((res) => {
 			return res.data.watchlist;
+		});
+}
+
+function getUsername(): Promise<string> {
+	return api
+		.get("/user/username")
+		.then((res) => {
+			return res.data.username;
+		})
+		.catch((err) => {
+			if (err.response) {
+				throw new Error(err.response.data.message);
+			} else {
+				throw new Error(err as string);
+			}
 		});
 }
 
@@ -117,58 +131,13 @@ function getAvailableShares(symbol: string): Promise<number> {
 		});
 }
 
-function signup(
-	username: string,
-	password: string
-): Promise<string> {
-	return api
-		.post("/auth/signup", {
-			username,
-			password
-		})
-		.then((_) => {
-			return "success";
-		})
-		.catch((err) => {
-			throw new Error(err.response.data.message);
-		});
-}
-
-function login(
-	username: string,
-	password: string
-): Promise<string> {
-	return api
-		.post("/auth/login", {
-			username,
-			password
-		})
-		.then((res) => {
-			if (res.data.accessToken !== undefined) {
-				// Store jwt and username in localStorage
-				tokens.setTokenAndUsername(res.data.accessToken, username);
-				return "success";
-			} else {
-				return "Invalid credentials.";
-			}
-		})
-		.catch((err) => {
-			if (err.response) {
-				throw new Error(err.response.data.message);
-			} else {
-				throw new Error(err as string);
-			}
-		});
-}
-
 export default {
 	makeTransaction,
 	getPositions,
 	getWatchlist,
+	getUsername,
 	editWatchlist,
 	getPortfolio,
 	getBuyingPower,
-	getAvailableShares,
-	signup,
-	login,
+	getAvailableShares
 };

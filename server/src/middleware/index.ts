@@ -1,4 +1,3 @@
-import authJwt from "./authJwt";
-import verifySignUp from "./verifySignUp";
+import authProxy from "./authProxy";
 
-export { authJwt, verifySignUp };
+export { authProxy };

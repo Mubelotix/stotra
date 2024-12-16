@@ -16,10 +16,9 @@ dotenv.config();
 // 		},
 // components: {
 // 	securitySchemes: {
-// 		bearerAuth: {
+// 		basicAuth: {
 // 			type: "http",
-// 			scheme: "bearer",
-// 			bearerFormat: "JWT",
+// 			scheme: "basic",
 // 		},
 // 	},
 // },
@@ -43,11 +42,10 @@ function swaggerDocs(app: Express, port: number) {
 		},
 		host: "0.0.0.0:" + port,
 		securityDefinitions: {
-			bearerAuth: {
-				type: "http",
-				scheme: "bearer",
-				bearerFormat: "JWT",
-			},
+			basicAuth: {
+				type: "basic",
+				scheme: "basic",
+			}
 		},
 		servers: [
 			{ url: process.env.STOTRA_SERVER_URL || `http://0.0.0.0:${port}` },

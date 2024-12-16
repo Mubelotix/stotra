@@ -1,10 +1,8 @@
 import React, { lazy, Suspense } from "react";
 import Navbar from "./components/Navbar";
 import { Container, Box, Spacer, Text, Link, Spinner } from "@chakra-ui/react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Login = lazy(() => import("./pages/Login"));
-const Signup = lazy(() => import("./pages/Signup"));
 const StockView = lazy(() => import("./pages/StockView"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 import NotFound from "./pages/NotFound";
@@ -48,9 +46,8 @@ function App() {
 						<Routes>
 							<Route path="/" element={<Dashboard />}></Route>
 
-							<Route path="/login" element={<Login />}></Route>
-
-							<Route path="/signup" element={<Signup />}></Route>
+							<Route path="/login" element={<Navigate to="/api/login" />}></Route>
+							<Route path="/logout" element={<Navigate to="/api/logout" />}></Route>
 
 							<Route path="/leaderboard" element={<Leaderboard />}></Route>
 

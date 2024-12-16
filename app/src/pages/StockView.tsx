@@ -14,7 +14,6 @@ import axios from "axios";
 import StockChart from "../components/StockChart";
 import TransactionPane from "../components/TransactionPane";
 import accounts from "../services/accounts.service";
-import tokens from "../services/tokens.service";
 import Newsfeed from "../components/Newsfeed";
 import {
 	AddIcon,
@@ -46,11 +45,9 @@ function StockView() {
 
 	useEffect(() => {
 		// Check if stock is on watchlist
-		if (tokens.isAuthenticated()) {
-			accounts.getWatchlist(true).then((res: any[]) => {
-				setOnWatchlist(res.some((stock) => stock.symbol === symbol));
-			});
-		}
+		accounts.getWatchlist(true).then((res: any[]) => {
+			setOnWatchlist(res.some((stock) => stock.symbol === symbol));
+		});
 
 		axios
 			.get(`/api/stocks/${symbol}/info`)
@@ -74,7 +71,7 @@ function StockView() {
 		<>
 			{stock.regularMarketPrice > 0 && (
 				<Flex direction={{ base: "column", md: "row" }} gap={5}>
-					<Box flex={tokens.isAuthenticated() ? "0.75" : "1"}>
+					<Box flex="0.75">
 						<Flex justifyContent={"space-between"}>
 							<Stat>
 								<Heading size="md" fontWeight="md">
@@ -105,46 +102,43 @@ function StockView() {
 									</Heading>
 								</HStack>
 							</Stat>
-							{tokens.isAuthenticated() &&
-								(onWatchlist ? (
-									<Button
-										leftIcon={<MinusIcon />}
-										variant={"outline"}
-										onClick={() =>
-											accounts
-												.editWatchlist(symbol as string, "remove")
-												.then(() => setOnWatchlist(false))
-										}
-									>
-										Remove from Watchlist
-									</Button>
-								) : (
-									<Button
-										leftIcon={<AddIcon />}
-										variant={"outline"}
-										onClick={() =>
-											accounts
-												.editWatchlist(symbol as string, "add")
-												.then(() => setOnWatchlist(true))
-										}
-									>
-										Add to Watchlist
-									</Button>
-								))}
+							{(onWatchlist ? (
+								<Button
+									leftIcon={<MinusIcon />}
+									variant={"outline"}
+									onClick={() =>
+										accounts
+											.editWatchlist(symbol as string, "remove")
+											.then(() => setOnWatchlist(false))
+									}
+								>
+									Remove from Watchlist
+								</Button>
+							) : (
+								<Button
+									leftIcon={<AddIcon />}
+									variant={"outline"}
+									onClick={() =>
+										accounts
+											.editWatchlist(symbol as string, "add")
+											.then(() => setOnWatchlist(true))
+									}
+								>
+									Add to Watchlist
+								</Button>
+							))}
 						</Flex>
 
 						<Spacer height={5} />
 
 						<StockChart symbol={symbol as string} />
 					</Box>
-					{tokens.isAuthenticated() && (
-						<Box flex="0.25" borderWidth="1px" borderRadius="md" p={5}>
-							<TransactionPane
-								symbol={symbol as string}
-								price={stock.regularMarketPrice}
-							/>
-						</Box>
-					)}
+					<Box flex="0.25" borderWidth="1px" borderRadius="md" p={5}>
+						<TransactionPane
+							symbol={symbol as string}
+							price={stock.regularMarketPrice}
+						/>
+					</Box>
 				</Flex>
 			)}
 			<Spacer height={5} />

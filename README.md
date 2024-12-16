@@ -48,7 +48,7 @@ The accent color defaults to Chakra's "Cyan 500" (`#00B5D8`), which can be chang
 
 ## Security 🛡️
 
-Stotra utilizes a robust and custom-built authentication system designed to ensure the security of user data and access to its services. Developed using TypeScript, the system incorporates features for user sign-up, login, and verification. To authenticate users, Stotra employs JSON Web Tokens (JWT), issuing a JWT to users upon successful login, which is then used for identity and permission verification in subsequent requests. As an added layer of security, Stotra integrates [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/), a gatekeeping service that prevents unauthorized access to the platform.
+Stotra utilizes a robust and custom-built authentication system designed to ensure the security of user data and access to its services. Developed using TypeScript, the system incorporates features for user sign-up, login, and verification. To authenticate users, Stotra employs JSON Web Tokens (JWT), issuing a JWT to users upon successful login, which is then used for identity and permission verification in subsequent requests.
 
 ### Known Limitations
 
@@ -69,8 +69,6 @@ Stotra uses a microservices architecture, with separate services for the fronten
 - Node.js (v14.18+)
 - MongoDB
   - I used [MongoDB Atlas](https://www.mongodb.com/basics/get-started) for the demo version
-- Cloudflare Turnstile (for authentication)
-  - [Create a free account](https://www.cloudflare.com/products/turnstile/) to get an API key
 
 ### Installation
 
@@ -101,7 +99,6 @@ $ docker compose up -d
 ```py
 STOTRA_MONGODB_URI=mongodb://devuser:devpassword@127.0.0.1:27017/users?authSource=admin # example
 STOTRA_JWT_SECRET=<random string of characters>
-STOTRA_TURNSTILE_SECRET=<api key for turnstile>
 # Optional: (for real-time news and stock data)
 STOTRA_NEWSFILTER_API=<api key for news descriptions>
 STOTRA_ALPHAVANTAGE_API=<api key for real-time stock data>

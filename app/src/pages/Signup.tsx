@@ -18,7 +18,6 @@ import {
 import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
-import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 import accounts from "../services/accounts.service";
 import tokens from "../services/tokens.service";
 
@@ -26,20 +25,12 @@ export default function Signup() {
 	const toast = useToast();
 	const navigate = useNavigate();
 
-	const turnstileRef = useRef<TurnstileInstance>(null);
-
 	useEffect(() => {
 		if (tokens.isAuthenticated()) {
 			// Redirect to home if already authenticated
 			navigate("/");
 		}
 	});
-
-	useLayoutEffect(() => {
-		return () => {
-			turnstileRef.current?.remove();
-		};
-	}, []);
 
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
@@ -49,7 +40,7 @@ export default function Signup() {
 		e.preventDefault();
 		// Call signup function from auth.js
 		accounts
-			.signup(username, password, turnstileRef.current?.getResponse()!)
+			.signup(username, password)
 			.then((res) => {
 				// Show alert with status of signup attempt
 				if (res === "success") {
@@ -114,10 +105,6 @@ export default function Signup() {
 								</InputGroup>
 							</FormControl>
 							<Stack spacing={5} pt={2}>
-								<Turnstile
-									ref={turnstileRef}
-									siteKey="0x4AAAAAAAI6ckchuGZipSqE"
-								/>
 								<Button
 									loadingText="Submitting"
 									size="lg"

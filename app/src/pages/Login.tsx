@@ -15,18 +15,15 @@ import {
 	useToast,
 } from "@chakra-ui/react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
-import React, { useEffect, useLayoutEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import accounts from "../services/accounts.service";
 import tokens from "../services/tokens.service";
-import { Turnstile, TurnstileInstance } from "@marsidev/react-turnstile";
 import { useReducer } from "react";
 
 export default function Login() {
 	const toast = useToast();
 	const navigate = useNavigate();
-
-	const turnstileRef = useRef<TurnstileInstance>(null);
 
 	useEffect(() => {
 		if (tokens.isAuthenticated()) {
@@ -34,12 +31,6 @@ export default function Login() {
 			navigate("/");
 		}
 	});
-
-	useLayoutEffect(() => {
-		return () => {
-			turnstileRef.current?.remove();
-		};
-	}, []);
 
 	const [loginData, setLoginData] = useReducer(
 		(state: any, newState: any) => ({ ...state, ...newState }),
@@ -52,8 +43,7 @@ export default function Login() {
 		accounts
 			.login(
 				loginData.username,
-				loginData.password,
-				turnstileRef.current?.getResponse()!,
+				loginData.password
 			)
 			.then((res) => {
 				// Show alert with status of login attempt
@@ -151,10 +141,6 @@ export default function Login() {
                     <Text>Forgot password?</Text>
                   </Link>
                 </Stack> */}
-								<Turnstile
-									ref={turnstileRef}
-									siteKey="0x4AAAAAAAI6ckchuGZipSqE"
-								/>
 
 								<Button type="submit" onClick={handleSubmit}>
 									Sign in

@@ -119,14 +119,12 @@ function getAvailableShares(symbol: string): Promise<number> {
 
 function signup(
 	username: string,
-	password: string,
-	turnstileToken: string,
+	password: string
 ): Promise<string> {
 	return api
 		.post("/auth/signup", {
 			username,
-			password,
-			"cf-turnstile-response": turnstileToken,
+			password
 		})
 		.then((_) => {
 			return "success";
@@ -138,14 +136,12 @@ function signup(
 
 function login(
 	username: string,
-	password: string,
-	turnstileToken: string,
+	password: string
 ): Promise<string> {
 	return api
 		.post("/auth/login", {
 			username,
-			password,
-			"cf-turnstile-response": turnstileToken,
+			password
 		})
 		.then((res) => {
 			if (res.data.accessToken !== undefined) {

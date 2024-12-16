@@ -100,6 +100,8 @@ $ docker compose up -d
 STOTRA_MONGODB_URI=mongodb://devuser:devpassword@127.0.0.1:27017/users?authSource=admin # example
 STOTRA_USERNAME_HEADER=x-username
 STOTRA_STARTING_CASH=100000
+STOTRA_LOGIN_URL=https://your-authentication-proxy.com/login
+STOTRA_LOGOUT_URL=https://your-authentication-proxy.com/logout
 # Optional: (for real-time news and stock data)
 STOTRA_NEWSFILTER_API=<api key for news descriptions>
 STOTRA_ALPHAVANTAGE_API=<api key for real-time stock data>

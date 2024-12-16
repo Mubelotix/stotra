@@ -6,6 +6,27 @@ import stocksController from "./controller/stocks.controller";
 import newsController from "./controller/news.controller";
 import leaderboardController from "./controller/leaderboard.controller";
 
+// Proxy-managed login and logout routes
+
+const loginUrl = process.env.STOTRA_LOGIN_URL;
+const logoutUrl = process.env.STOTRA_LOGOUT_URL;
+
+if (!loginUrl) {
+	throw new Error("STOTRA_LOGIN_URL is not defined");
+}
+
+if (!logoutUrl) {
+	throw new Error("STOTRA_LOGOUT_URL is not defined");
+}
+
+router.get("/api/login", (req, res) => {
+	res.redirect(loginUrl);
+});
+
+router.get("/api/logout", (req, res) => {
+	res.redirect(logoutUrl);
+});
+
 // User data routes
 router.get("/api/user/ledger", [authProxy.verifyToken], userController.getLedger);
 router.get(

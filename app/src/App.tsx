@@ -6,6 +6,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const StockView = lazy(() => import("./pages/StockView"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 import NotFound from "./pages/NotFound";
+import Redirect from "./components/Redirect";
 
 export type Transaction = {
 	symbol: string;
@@ -46,8 +47,8 @@ function App() {
 						<Routes>
 							<Route path="/" element={<Dashboard />}></Route>
 
-							<Route path="/login" element={<Navigate to="/api/login" />}></Route>
-							<Route path="/logout" element={<Navigate to="/api/logout" />}></Route>
+							<Route path="/login" element={<Redirect to="/api/login" />}></Route>
+							<Route path="/logout" element={<Redirect to="/api/logout" />}></Route>
 
 							<Route path="/leaderboard" element={<Leaderboard />}></Route>
 

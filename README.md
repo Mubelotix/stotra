@@ -90,12 +90,16 @@ $ cd ../server
 $ npm install
 ```
 
-3. Create a `.env` file in the `server` directory and add the following environment variables:
+3. Next step will require a mongodb instance. You can use docker to spin up a local instance:
+
+```sh
+$ docker compose up -d
+```
+
+4. Create a `.env` file in the `server` directory and add the following environment variables:
 
 ```py
-STOTRA_MONGODB_USERNAME=<username>
-STOTRA_MONGODB_PASSWORD=<pass>
-STOTRA_MONGODB_CLUSTER=<example: cluster0.example.mongodb.net>
+STOTRA_MONGODB_URI=mongodb://devuser:devpassword@127.0.0.1:27017/users?authSource=admin # example
 STOTRA_JWT_SECRET=<random string of characters>
 STOTRA_TURNSTILE_SECRET=<api key for turnstile>
 # Optional: (for real-time news and stock data)
@@ -103,7 +107,7 @@ STOTRA_NEWSFILTER_API=<api key for news descriptions>
 STOTRA_ALPHAVANTAGE_API=<api key for real-time stock data>
 ```
 
-4. Run the frontend and backend in separate terminals
+5. Run the frontend and backend in separate terminals
 
 ```bash
 $ cd app

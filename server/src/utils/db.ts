@@ -4,16 +4,11 @@ mongoose.Promise = global.Promise;
 require("dotenv").config();
 
 // Read password from dotenv file
-const password = process.env.STOTRA_MONGODB_PASSWORD;
+const uri = process.env.STOTRA_MONGODB_URI;
 
-const uri =
-	"mongodb+srv://" +
-	process.env.STOTRA_MONGODB_USERNAME +
-	":" +
-	password +
-	"@" +
-	process.env.STOTRA_MONGODB_CLUSTER +
-	"/users?authMechanism=DEFAULT&retryWrites=true&w=majority";
+if (!uri) {
+	throw new Error("MongoDB URI is not defined");
+}
 
 mongoose.connect(uri);
 

@@ -52,7 +52,7 @@ export async function verifyToken(
 		username = username[0];
 	}
 	if (!username) {
-		return res.status(403).send({ message: "No username provided" });
+		return res.status(401).send({ message: "No username provided" });
 	}
 
 	try {

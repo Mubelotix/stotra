@@ -7,7 +7,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const fetchStockData = async (symbol: string): Promise<any> => {
-	const cacheKey = symbol + "-quote";
+	let cacheKey = symbol + "-quote";
 
 	try {
 		if (stockCache.has(cacheKey)) {
@@ -37,6 +37,7 @@ export const fetchStockData = async (symbol: string): Promise<any> => {
 				regularMarketChangePercent,
 			};
 
+			cacheKey = symbol + "-quote";
 			stockCache.set(cacheKey, stockData);
 			return stockData;
 		}
@@ -59,6 +60,7 @@ export const fetchStockData = async (symbol: string): Promise<any> => {
 				regularMarketChangePercent,
 			};
 
+			cacheKey = symbol + "-quote";
 			stockCache.set(cacheKey, stockData);
 			return stockData;
 		} else {

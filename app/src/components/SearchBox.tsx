@@ -14,6 +14,7 @@ import {
 	InputLeftElement,
 	InputGroup,
 	useTheme,
+	PopoverHeader,
 } from "@chakra-ui/react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -114,24 +115,24 @@ function SearchBox() {
 			{results != null && (
 				<PopoverContent w="sm">
 					<PopoverArrow />
-					{/* <PopoverHeader>Header</PopoverHeader> */}
+					{<PopoverHeader>This searches ticker symbols. If you don't know the ticker of your desired company and can't find it here, you should look it up on Google first.</PopoverHeader>}
 					<PopoverBody>
 						{/* List of stocks */}
 						{results.length > 0 ? (
 							<List>
 								{results!.map((stock, i) => {
 									return (
-										<ListItem
-											key={stock.symbol}
-											width="100%"
-											height="auto"
-											color={selectedIndex === i ? "white" : ""}
-											bg={selectedIndex === i ? accentColor + ".500" : ""}
-											onMouseOver={() => setSelectedIndex(i)}
-											borderRadius="md"
-											p={2}
-										>
-											<Link to={`/stocks/${stock.symbol}`}>
+										<Link to={`/stocks/${stock.symbol}`}>
+											<ListItem
+												key={stock.symbol}
+												width="100%"
+												height="auto"
+												color={selectedIndex === i ? "white" : ""}
+												bg={selectedIndex === i ? accentColor + ".500" : ""}
+												onMouseOver={() => setSelectedIndex(i)}
+												borderRadius="md"
+												p={2}
+											>	
 												<Flex gap={1}>
 													<Text
 														fontWeight="bold"
@@ -151,8 +152,8 @@ function SearchBox() {
 														{stock.longname}
 													</Text>
 												</Flex>
-											</Link>
-										</ListItem>
+											</ListItem>
+										</Link>
 									);
 								})}
 							</List>

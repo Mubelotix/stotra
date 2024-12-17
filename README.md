@@ -12,6 +12,7 @@ This is a fork of the original project. The following changes have been made:
 - Made it possible to configure the leaderboard cache TTL
 - Added portfolio value on dashboard
 - Added a `Dockerfile` and `docker-compose.yml` for easier deployment
+- Enlarged the hitbox of search results
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">

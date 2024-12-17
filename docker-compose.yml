@@ -1,15 +1,38 @@
 services:
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: stotra-backend
+    environment:
+      - STOTRA_MONGODB_URI=mongodb://devuser:devpassword@mongodb:27017/users?authSource=admin
+      - STOTRA_LOGIN_URL=https://your-authentication-proxy.com/login
+      - STOTRA_LOGOUT_URL=https://your-authentication-proxy.com/logout
+      # Optional: (for real-time news and stock data)
+      - STOTRA_NEWSFILTER_API=<api key for news descriptions>
+      - STOTRA_ALPHAVANTAGE_API=<api key for stock data>
+    ports:
+      - "3000:3010"
+    networks:
+      - backend-network
+    depends_on:
+      - mongodb
+
   mongodb:
     image: mongo:6.0
     container_name: mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
     environment:
       MONGO_INITDB_ROOT_USERNAME: devuser
       MONGO_INITDB_ROOT_PASSWORD: devpassword
       MONGO_INITDB_DATABASE: users
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - backend-network
 
 volumes:
   mongodb_data:
+
+networks:
+  backend-network:
+    driver: bridge

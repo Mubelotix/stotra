@@ -3,7 +3,7 @@
 This is a fork of the original project. The following changes have been made:
 
 - Updated dependencies to fix breaking changes in underlying APIs
-- Simplified development workflow by adding a `docker-compose.yml` file
+- Simplified development workflow by adding a `dev-docker-compose.yml` file
 - Removed turnstile entirely
 - Made it possible to buy fractional shares
 - Replaced the man-made authentication system with proxy-provided authentication
@@ -11,6 +11,7 @@ This is a fork of the original project. The following changes have been made:
 - Edited author notice in the footer
 - Made it possible to configure the leaderboard cache TTL
 - Added portfolio value on dashboard
+- Added a `Dockerfile` and `docker-compose.yml` for easier deployment
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">
@@ -95,7 +96,7 @@ $ npm install
 3. Next step will require a mongodb instance. You can use docker to spin up a local instance:
 
 ```sh
-$ docker compose up -d
+$ docker compose -f dev-docker-compose.yml up
 ```
 
 4. Create a `.env` file in the `server` directory and add the following environment variables:

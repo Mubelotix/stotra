@@ -2,9 +2,12 @@ import { Request, Response } from "express";
 import User from "../models/user.model";
 import { fetchStockData } from "../utils/requests";
 
-// Cache the leaderboard for 10 minutes
+import dotenv from "dotenv";
+dotenv.config();
+const leaderboardCacheTTL = parseInt(process.env.STOTRA_LEADERBOARD_CACHE_TTL || "600");
+
 import NodeCache from "node-cache";
-const cache = new NodeCache({ stdTTL: 10 * 60 });
+const cache = new NodeCache({ stdTTL: leaderboardCacheTTL });
 
 const getLeaderboard = (req: Request, res: Response) => {
 	/* 
@@ -16,7 +19,7 @@ const getLeaderboard = (req: Request, res: Response) => {
 		return;
 	}
 
-	getLeaderboardTopN(5)
+	getLeaderboardTopN(-1)
 		.then((users) => {
 			cache.set("leaderboard", users);
 			res.status(200).send({ users });

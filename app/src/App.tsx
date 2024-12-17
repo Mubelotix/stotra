@@ -1,7 +1,7 @@
 import React, { lazy, Suspense } from "react";
 import Navbar from "./components/Navbar";
 import { Container, Box, Spacer, Text, Link, Spinner } from "@chakra-ui/react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const StockView = lazy(() => import("./pages/StockView"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));

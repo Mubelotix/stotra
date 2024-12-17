@@ -9,6 +9,8 @@ This is a fork of the original project. The following changes have been made:
 - Replaced the man-made authentication system with proxy-provided authentication
 - Fixed a bug where tickers would get confused in internal cache
 - Edited author notice in the footer
+- Made it possible to configure the leaderboard cache TTL
+- Added portfolio value on dashboard
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">

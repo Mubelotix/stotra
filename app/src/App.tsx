@@ -66,8 +66,12 @@ function App() {
 					<Link href="https://spike.codes" fontWeight="bold">
 						Spike
 					</Link>{" "}
+					and{" "}
+					<Link href="https://github.com/Mubelotix" fontWeight="bold">
+						Mubelotix
+					</Link>{" "}
 					on{" "}
-					<Link href="https://github.com/spikecodes/stotra" fontWeight="bold">
+					<Link href="https://github.com/Mubelotix/stotra" fontWeight="bold">
 						GitHub
 					</Link>
 				</Text>

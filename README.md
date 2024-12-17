@@ -7,6 +7,8 @@ This is a fork of the original project. The following changes have been made:
 - Removed turnstile entirely
 - Made it possible to buy fractional shares
 - Replaced the man-made authentication system with proxy-provided authentication
+- Fixed a bug where tickers would get confused in internal cache
+- Edited author notice in the footer
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">

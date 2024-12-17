@@ -2,6 +2,7 @@ import Position from "../models/position.model";
 import User, { IUser } from "../models/user.model";
 import { Request, Response } from "express";
 import { fetchStockData } from "../utils/requests";
+import { getLeaderboardTopN } from "./leaderboard.controller";
 
 const getLedger = (req: Request, res: Response) => {
 	/* 
@@ -68,42 +69,47 @@ const getPortfolio = async (req: Request, res: Response) => {
 	const symbols = Object.keys(positionsNoDupes);
 	const quantities = Object.values(positionsNoDupes);
 
-	// Loop through each symbol and fetch current price
-	Promise.all(symbols.map((symbol) => fetchStockData(symbol)))
-		.then((values) => {
-			var listOfPositions: any[] = [];
+    try {
+        const values = await Promise.all(symbols.map((symbol) => fetchStockData(symbol)));
 
-			// Sum up the value of all positions
-			values.map((value, i) => {
-				// Sum up the value of all positions
-				portfolioValue += value.regularMarketPrice * quantities[i];
-				portfolioPrevCloseValue +=
-					value.regularMarketPreviousClose * quantities[i];
-			});
+        // Sum up the value of all positions
+        values.forEach((value, i) => {
+            portfolioValue += value.regularMarketPrice * quantities[i];
+            portfolioPrevCloseValue += value.regularMarketPreviousClose * quantities[i];
+        });
 
-			// Create list of positions to send to frontend with data from user.positions plus the properties from the fetchStockData response
-			user!.positions.forEach((position) => {
-				const positionLiveData = values.find(
-					(value) => value.symbol === position.symbol,
-				);
-				if (positionLiveData) {
-					listOfPositions.push({
-						...position,
-						...positionLiveData,
-					});
-				}
-			});
+        // Create list of positions to send to frontend with data from user.positions plus the properties from the fetchStockData response
+		let listOfPositions: any[] = [];
+        user.positions.forEach((position) => {
+            const positionLiveData = values.find(
+                (value) => value.symbol === position.symbol,
+            );
+            if (positionLiveData) {
+                listOfPositions.push({
+                    ...position,
+                    ...positionLiveData,
+                });
+            }
+        });
 
-			res.status(200).json({
-				portfolioValue,
-				portfolioPrevCloseValue,
-				positions: listOfPositions,
-				cash: user!.cash,
-			});
-		})
-		.catch((err) => {
-			res.status(500).send({ message: err.message });
-		});
+        // Include user's rank
+        const userValues = await getLeaderboardTopN(-1);
+        let rank = userValues.findIndex((entry) => entry.username === user.username);
+		if (rank !== -1) {
+			rank += 1;
+		}
+
+        res.status(200).json({
+            portfolioValue,
+            portfolioPrevCloseValue,
+            positions: listOfPositions,
+            cash: user.cash,
+            rank,
+        });
+    } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+        res.status(500).send({ message: errorMessage });
+    }
 };
 
 const getWatchlist = (req: Request, res: Response) => {

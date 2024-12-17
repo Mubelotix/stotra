@@ -9,7 +9,7 @@ import {
 	useToast,
 } from "@chakra-ui/react";
 import accounts from "../services/accounts.service";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const formatter = new Intl.NumberFormat("en-US", {
 	style: "currency",
@@ -20,6 +20,7 @@ function PortfolioPreview() {
 	const [portfolioValue, setPortfolioValue] = useState(-1);
 	const [prevCloseValue, setPrevCloseValue] = useState(0.0);
 	const [cash, setCash] = useState(0.0);
+	const [rank, setRank] = useState(-1);
 	const [isLoading, setIsLoading] = useState(true);
 
 	const toast = useToast();
@@ -28,10 +29,11 @@ function PortfolioPreview() {
 	useEffect(() => {
 		accounts
 			.getPortfolio()
-			.then(({ portfolioValue, portfolioPrevCloseValue, cash }) => {
+			.then(({ portfolioValue, portfolioPrevCloseValue, cash, rank }) => {
 				setPortfolioValue(portfolioValue);
 				setPrevCloseValue(portfolioPrevCloseValue);
 				setCash(cash);
+				setRank(rank);
 				setIsLoading(false);
 			})
 			.catch((err) => {
@@ -48,7 +50,7 @@ function PortfolioPreview() {
 
 	return (
 		<Flex className="PortfolioPreview" wrap="wrap" gap={5}>
-			<Box flex="0.333">
+			<Box flex="1">
 				{isLoading ? (
 					<Spinner size={"lg"} />
 				) : (
@@ -96,7 +98,7 @@ function PortfolioPreview() {
 					</Heading>
 				)}
 			</Box>
-			<Box flex="0.334">
+			<Box flex="1">
 				{isLoading ? (
 					<Spinner size={"lg"} />
 				) : (
@@ -111,7 +113,7 @@ function PortfolioPreview() {
 					</>
 				)}
 			</Box>
-			<Box flex="0.333">
+			<Box flex="1">
 				{isLoading ? (
 					<Spinner size={"lg"} />
 				) : (
@@ -124,6 +126,21 @@ function PortfolioPreview() {
 							{formatter.format(portfolioValue + cash)}
 						</Heading>
 					</>
+				)}
+			</Box>
+			<Box flex="1">
+				{isLoading ? (
+					<Spinner size={"lg"} />
+				) : (
+					<Link to="/leaderboard">
+						<Heading as="h4" size="sm" color="gray.500" fontWeight="600">
+							Rank
+						</Heading>
+						<Spacer h="1" />
+						<Heading as="h2" size="xl">
+							{rank > 0 ? rank : "N/A"}
+						</Heading>
+					</Link>
 				)}
 			</Box>
 		</Flex>

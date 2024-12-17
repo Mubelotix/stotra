@@ -83,6 +83,7 @@ function getPortfolio(): Promise<{
 	portfolioPrevCloseValue: number;
 	positions: Position[];
 	cash: number;
+	rank: number;
 }> {
 	return api.get("/user/portfolio").then((res) => {
 		return {
@@ -90,6 +91,7 @@ function getPortfolio(): Promise<{
 			portfolioPrevCloseValue: res.data.portfolioPrevCloseValue,
 			positions: res.data.positions,
 			cash: res.data.cash,
+			rank: res.data.rank,
 		};
 	});
 }

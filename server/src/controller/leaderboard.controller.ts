@@ -29,7 +29,7 @@ const getLeaderboard = (req: Request, res: Response) => {
 		});
 };
 
-async function getLeaderboardTopN(
+export async function getLeaderboardTopN(
 	n: number,
 ): Promise<{ username: string; value: number }[]> {
 	// 1. Collate all unique stock symbols from users' positions using Aggregation

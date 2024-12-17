@@ -34,7 +34,7 @@ function PositionsList() {
 	return (
 		<Card>
 			<CardHeader>
-				<Heading size="md">My Portfolio</Heading>
+				<Heading size="md">My Positions</Heading>
 			</CardHeader>
 
 			<CardBody pt="0">

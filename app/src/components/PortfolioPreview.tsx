@@ -47,14 +47,14 @@ function PortfolioPreview() {
 	}, []);
 
 	return (
-		<Flex className="PortfolioPreview">
-			<Box flex="0.5">
+		<Flex className="PortfolioPreview" wrap="wrap" gap={5}>
+			<Box flex="0.333">
 				{isLoading ? (
 					<Spinner size={"lg"} />
 				) : (
 					<>
 						<Heading as="h4" size="sm" color="gray.500" fontWeight="600">
-							Total Investment
+							Investment
 						</Heading>
 						<Spacer h="1" />
 						<Heading as="h2" size="xl">
@@ -96,7 +96,7 @@ function PortfolioPreview() {
 					</Heading>
 				)}
 			</Box>
-			<Box flex="0.5">
+			<Box flex="0.334">
 				{isLoading ? (
 					<Spinner size={"lg"} />
 				) : (
@@ -107,6 +107,21 @@ function PortfolioPreview() {
 						<Spacer h="1" />
 						<Heading as="h2" size="xl">
 							{formatter.format(cash)}
+						</Heading>
+					</>
+				)}
+			</Box>
+			<Box flex="0.333">
+				{isLoading ? (
+					<Spinner size={"lg"} />
+				) : (
+					<>
+						<Heading as="h4" size="sm" color="gray.500" fontWeight="600">
+							Portfolio Value (Total)
+						</Heading>
+						<Spacer h="1" />
+						<Heading as="h2" size="xl">
+							{formatter.format(portfolioValue + cash)}
 						</Heading>
 					</>
 				)}

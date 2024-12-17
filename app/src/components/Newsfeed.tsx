@@ -126,7 +126,6 @@ function Newsfeed(props: { symbol: string }) {
 									<Text fontSize="sm" fontWeight="500" mr="2">
 										Symbols:
 									</Text>
-									<br />
 									<HStack flexWrap="wrap">
 										{item.symbols.map((symbol) => (
 											<Tag

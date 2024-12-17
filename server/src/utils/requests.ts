@@ -6,10 +6,10 @@ const stockCache = new Cache({ stdTTL: 60 }); // 1 minute
 import dotenv from "dotenv";
 dotenv.config();
 
-export const fetchStockData = async (demandedSymbol: string): Promise<any> => {
-	let cacheKey = demandedSymbol + "-quote";
+yahooFinance.setGlobalConfig({ validation: { logErrors: false} });
 
-	const cachedData = stockCache.get(cacheKey);
+export const fetchStockData = async (demandedSymbol: string): Promise<any> => {
+	const cachedData = stockCache.get(demandedSymbol + "-quote");
 	if (cachedData) {
 		return cachedData;
 	}
@@ -44,36 +44,36 @@ export const fetchStockData = async (demandedSymbol: string): Promise<any> => {
 			regularMarketChangePercent,
 		};
 
-		cacheKey = symbol + "-quote";
-		stockCache.set(cacheKey, stockData);
+		stockCache.set(symbol + "-quote", stockData);
 		return stockData;
 	} catch (err: any) {
-		if (err.result && Array.isArray(err.result) && err.result.length > 0) {
-			let quote = err.result[0];
-
-			const {
-				symbol,
-				regularMarketPrice,
-				regularMarketChangePercent,
-				longName,
-				regularMarketPreviousClose,
-			} = quote;
-
-			if (demandedSymbol !== symbol) {
-				throw new Error("Symbol mismatch");
+		if (err.result && Array.isArray(err.result)) {
+			for (let result of err.result) {				
+				const {
+					symbol,
+					regularMarketPrice,
+					regularMarketChangePercent,
+					longName,
+					regularMarketPreviousClose,
+				} = result;
+	
+				if (demandedSymbol !== symbol) {
+					continue;
+				}
+	
+				const stockData = {
+					symbol,
+					longName,
+					regularMarketPrice,
+					regularMarketPreviousClose,
+					regularMarketChangePercent,
+				};
+	
+				stockCache.set(symbol + "-quote", stockData);
+				return stockData;	
 			}
-
-			const stockData = {
-				symbol,
-				longName,
-				regularMarketPrice,
-				regularMarketPreviousClose,
-				regularMarketChangePercent,
-			};
-
-			cacheKey = symbol + "-quote";
-			stockCache.set(cacheKey, stockData);
-			return stockData;
+			console.error("No results found for " + demandedSymbol);
+			throw new Error("No results found for " + demandedSymbol);
 		} else {
 			console.error(err);
 			console.error("Error fetching " + demandedSymbol + " stock data:", err);

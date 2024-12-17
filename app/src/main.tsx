@@ -12,7 +12,7 @@ import { BrowserRouter } from "react-router-dom";
 import "@fontsource-variable/manrope";
 import "@fontsource-variable/inter";
 
-const accentColor = localStorage.getItem("accentColor") || "cyan";
+const accentColor = localStorage.getItem("accentColor") || "pink";
 
 const customTheme = extendTheme(
 	withDefaultColorScheme({ colorScheme: accentColor }),

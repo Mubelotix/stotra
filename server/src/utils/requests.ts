@@ -6,51 +6,62 @@ const stockCache = new Cache({ stdTTL: 60 }); // 1 minute
 import dotenv from "dotenv";
 dotenv.config();
 
-export const fetchStockData = async (symbol: string): Promise<any> => {
-	let cacheKey = symbol + "-quote";
+export const fetchStockData = async (demandedSymbol: string): Promise<any> => {
+	let cacheKey = demandedSymbol + "-quote";
+
+	const cachedData = stockCache.get(cacheKey);
+	if (cachedData) {
+		return cachedData;
+	}
 
 	try {
-		if (stockCache.has(cacheKey)) {
-			return stockCache.get(cacheKey);
-		} else {
-			const quote = await yahooFinance.quoteCombine(symbol, {
-				fields: [
-					"regularMarketPrice",
-					"regularMarketChangePercent",
-					"longName",
-					"regularMarketPreviousClose",
-				],
-			});
+		const quote = await yahooFinance.quoteCombine(demandedSymbol, {
+			fields: [
+				"regularMarketPrice",
+				"regularMarketChangePercent",
+				"longName",
+				"regularMarketPreviousClose",
+			],
+		});
 
-			const {
-				regularMarketPrice,
-				regularMarketChangePercent,
-				longName,
-				regularMarketPreviousClose,
-			} = quote;
+		const {
+			symbol,
+			regularMarketPrice,
+			regularMarketChangePercent,
+			longName,
+			regularMarketPreviousClose,
+		} = quote;
 
-			const stockData = {
-				symbol,
-				longName,
-				regularMarketPrice,
-				regularMarketPreviousClose,
-				regularMarketChangePercent,
-			};
-
-			cacheKey = symbol + "-quote";
-			stockCache.set(cacheKey, stockData);
-			return stockData;
+		if (demandedSymbol !== symbol) {
+			throw new Error("Symbol mismatch");
 		}
+
+		const stockData = {
+			symbol,
+			longName,
+			regularMarketPrice,
+			regularMarketPreviousClose,
+			regularMarketChangePercent,
+		};
+
+		cacheKey = symbol + "-quote";
+		stockCache.set(cacheKey, stockData);
+		return stockData;
 	} catch (err: any) {
-		if (err.result && Array.isArray(err.result)) {
+		if (err.result && Array.isArray(err.result) && err.result.length > 0) {
 			let quote = err.result[0];
 
 			const {
+				symbol,
 				regularMarketPrice,
 				regularMarketChangePercent,
 				longName,
 				regularMarketPreviousClose,
 			} = quote;
+
+			if (demandedSymbol !== symbol) {
+				throw new Error("Symbol mismatch");
+			}
 
 			const stockData = {
 				symbol,
@@ -65,7 +76,7 @@ export const fetchStockData = async (symbol: string): Promise<any> => {
 			return stockData;
 		} else {
 			console.error(err);
-			console.error("Error fetching " + symbol + " stock data:", err);
+			console.error("Error fetching " + demandedSymbol + " stock data:", err);
 			throw new Error(err);
 		}
 	}

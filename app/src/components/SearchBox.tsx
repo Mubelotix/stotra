@@ -90,6 +90,18 @@ function SearchBox() {
 		}
 	}, [location]);
 
+    const onPopoverToggle = (e: React.FocusEvent<HTMLInputElement>) => {
+        const target = e.relatedTarget as Element | null;
+        if (target && target.closest && target.closest("a")) {
+            let href = target.getAttribute("href");
+			if (href) {
+				navigate(href);
+			}
+			onToggle();
+        }
+        onToggle();
+    };
+
 	return (
 		<Popover
 			initialFocusRef={initialFocusRef}
@@ -105,7 +117,7 @@ function SearchBox() {
 					<Input
 						placeholder="Search (ex. AAPL)"
 						ref={initialFocusRef}
-						onBlur={onToggle}
+						onBlur={onPopoverToggle}
 						onFocus={onToggle}
 						onKeyDown={onKeyDown}
 						onChange={(e) => setQuery(e.target.value)}
@@ -122,14 +134,13 @@ function SearchBox() {
 							<List>
 								{results!.map((stock, i) => {
 									return (
-										<Link to={`/stocks/${stock.symbol}`}>
+										<Link key={stock.symbol} to={`/stocks/${stock.symbol}`} onMouseOver={() => setSelectedIndex(i)}>
 											<ListItem
 												key={stock.symbol}
 												width="100%"
 												height="auto"
 												color={selectedIndex === i ? "white" : ""}
 												bg={selectedIndex === i ? accentColor + ".500" : ""}
-												onMouseOver={() => setSelectedIndex(i)}
 												borderRadius="md"
 												p={2}
 											>	

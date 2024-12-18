@@ -49,7 +49,7 @@ function PortfolioPreview() {
 	}, []);
 
 	return (
-		<Flex className="PortfolioPreview" wrap="wrap" gap={5}>
+		<Flex className="PortfolioPreview" wrap="wrap" css="text-wrap:nowrap" gap={5}>
 			<Box flex="1">
 				{isLoading ? (
 					<Spinner size={"lg"} />
@@ -93,7 +93,7 @@ function PortfolioPreview() {
 						</Text>
 					</Heading>
 				) : (
-					<Heading as="h2" size="md" fontWeight="normal">
+					<Heading as="h2" size="md" fontWeight="normal" css="text-wrap:wrap">
 						Make some trades to get started!
 					</Heading>
 				)}

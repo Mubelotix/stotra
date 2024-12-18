@@ -133,33 +133,34 @@ export default function StockChart(props: { symbol: string }) {
 				lineWidth: 2,
 			},
 		},
+		series: [],
 	} as any);
 
 	const fetchStockData = (period: string = "1m") => {
 		setIsLoading(true);
 		axios
-			.get(`/api/stocks/${props.symbol}/historical?period=` + period)
+			.get(`/api/stocks/${props.symbol}/historical?period=${period}`)
 			.then((res) => {
-				// if (chartComponentRef !== null) {
-				// chartComponentRef.current!.chart!.series[0]!.setData(res.data);
-				// } else {
-				setOptions({
-					...options,
-					series: [
-						{
-							name: "Price",
-							type: "spline",
-							id: "stock_chart",
-
-							data: res.data,
-							lineWidth: 2,
-							tooltip: {
-								valueDecimals: 2,
-							},
+				setOptions((prevOptions) => ({
+					...prevOptions,
+					series: [{
+						name: "Price",
+						type: "spline",
+						id: "stock_chart",
+						data: res.data,
+						lineWidth: 2,
+						tooltip: {
+							valueDecimals: 2,
 						},
-					],
-				});
-				// }
+					}],
+				}));
+				setIsLoading(false);
+			})
+			.catch(() => {
+				setOptions((prevOptions) => ({
+					...prevOptions,
+					series: [],
+				}));
 				setIsLoading(false);
 			});
 	};

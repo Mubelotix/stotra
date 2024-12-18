@@ -16,6 +16,7 @@ This is a fork of the original project. The following changes have been made:
 - Added rank in dashboard
 - Fixed a bug where the chart mismatched the stock
 - Adapted the rate-limit for use with a proxy
+- Added an info box to explain our users what this is
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">

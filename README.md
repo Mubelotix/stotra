@@ -17,6 +17,7 @@ This is a fork of the original project. The following changes have been made:
 - Fixed a bug where the chart mismatched the stock
 - Adapted the rate-limit for use with a proxy
 - Added an info box to explain our users what this is
+- Fixed a bug discarding click events on search results
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">

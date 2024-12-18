@@ -52,13 +52,14 @@ const getPortfolio = async (req: Request, res: Response) => {
 		res.status(500).json({ message: "User not found" });
 	}
 	user = user!;
+	const { username, positions, cash } = user;
 
 	let portfolioValue = 0; //user.cash
 	let portfolioPrevCloseValue = 0;
 
 	// Create array of how many of each symbol (no duplicates)
 	let positionsNoDupes: { [key: string]: number } = {};
-	user!.positions.forEach((position) => {
+	positions.forEach((position) => {
 		if (positionsNoDupes[position.symbol]) {
 			positionsNoDupes[position.symbol] += position.quantity;
 		} else {
@@ -78,9 +79,9 @@ const getPortfolio = async (req: Request, res: Response) => {
             portfolioPrevCloseValue += value.regularMarketPreviousClose * quantities[i];
         });
 
-        // Create list of positions to send to frontend with data from user.positions plus the properties from the fetchStockData response
+        // Create list of positions to send to frontend with data from positions plus the properties from the fetchStockData response
 		let listOfPositions: any[] = [];
-        user.positions.forEach((position) => {
+        positions.forEach((position) => {
             const positionLiveData = values.find(
                 (value) => value.symbol === position.symbol,
             );
@@ -94,7 +95,7 @@ const getPortfolio = async (req: Request, res: Response) => {
 
         // Include user's rank
         const userValues = await getLeaderboardTopN(-1);
-        let rank = userValues.findIndex((entry) => entry.username === user.username);
+        let rank = userValues.findIndex((entry) => entry.username === username);
 		if (rank !== -1) {
 			rank += 1;
 		}
@@ -103,7 +104,7 @@ const getPortfolio = async (req: Request, res: Response) => {
             portfolioValue,
             portfolioPrevCloseValue,
             positions: listOfPositions,
-            cash: user.cash,
+            cash: cash,
             rank,
         });
     } catch (err) {

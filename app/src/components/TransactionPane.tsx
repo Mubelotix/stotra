@@ -33,7 +33,7 @@ function TransactionPane(props: { symbol: string; price: number }) {
 	const [buyingPower, setBuyingPower] = useState(0);
 	const [availableShares, setAvailableShares] = useState(0);
 	const [isLoading, setIsLoading] = useState(false);
-	const [isByValue, setIsByValue] = useState(false);
+	const [isByValue, setIsByValue] = useState(true);
 
 	const location = useLocation();
 
@@ -130,7 +130,7 @@ function TransactionPane(props: { symbol: string; price: number }) {
 						defaultValue={count}
 						min={0.000000001}
 						width="20"
-						onChange={(e) => setCount(parseInt(e))}
+						onChange={(e) => setCount(parseFloat(e))}
 					>
 						<NumberInputField />
 						<NumberInputStepper>

@@ -12,6 +12,7 @@ const app = express();
 dotenv.config();
 
 const PORT = process.env.PORT || 3010;
+const IP_HEADER = process.env.STOTRA_IP_HEADER?.toLowerCase();
 
 // Docs
 const { swaggerDocs } = require("./utils/swagger");
@@ -27,10 +28,13 @@ app.use(express.json());
 
 // Ratelimiting
 const apiLimiter = rateLimit({
-	windowMs: 5 * 60 * 1000, // 15 minutes
-	max: 250000000, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+	windowMs: 5 * 60 * 1000, // 5 minutes
+	max: 150, // Limit each IP to 150 requests per `window` (here, per 5 minutes)
 	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
 	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+	keyGenerator: (req: any) => {
+		return IP_HEADER ? req.headers[IP_HEADER] || req.ip : req.ip;
+	},
 });
 
 app.use("/api/", apiLimiter);

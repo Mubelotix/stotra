@@ -7,6 +7,7 @@ import {
 	Tag,
 	Tbody,
 	Td,
+	Text,
 	Th,
 	Thead,
 	Tr,
@@ -73,6 +74,9 @@ function Leaderboard() {
 					))}
 				</Tbody>
 			</Table>
+			<Text mt={4} fontSize="sm" color="gray.500">
+				The leaderboard is updated every few minutes.
+			</Text>
 		</Box>
 	);
 }

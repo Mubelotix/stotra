@@ -160,6 +160,4 @@ Give a ⭐️ if this project helped you!
 
 ## 📝 License
 
-Copyright © 2023 [Spike](https://github.com/spikecodes).
-
 This project is [MIT License](https://github.com/spikecodes/stotra/blob/main/LICENSE) licensed.

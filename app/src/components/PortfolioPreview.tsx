@@ -138,7 +138,7 @@ function PortfolioPreview() {
 						</Heading>
 						<Spacer h="1" />
 						<Heading as="h2" size="xl">
-							{rank > 0 ? rank : "N/A"}
+							{rank === -1 ? "N/A" : `#${rank}`}
 						</Heading>
 					</Link>
 				)}

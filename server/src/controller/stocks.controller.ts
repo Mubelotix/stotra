@@ -13,7 +13,7 @@ import yahooFinance from "yahoo-finance2";
 import dotenv from "dotenv";
 dotenv.config();
 const cryptoMinimumDailyVolume = parseInt(process.env.STOTRA_CRYPTO_MINIMUM_DAILY_VOLUME || "1000000");
-const minimumAverageDailyVolume = parseInt(process.env.STOTRA_MINIMUM_AVERAGE_DAILY_VOLUME || "100000");
+const minimumDailyVolume = parseInt(process.env.STOTRA_MINIMUM_DAILY_VOLUME || "100000");
 
 const getInfo = async (req: Request, res: Response) => {
 	/* 
@@ -65,8 +65,8 @@ const buyStock = async (req: Request, res: Response) => {
 		if (quoteType === "CRYPTOCURRENCY" && averageDailyVolume10Day < cryptoMinimumDailyVolume) {
 			res.status(400).send({ message: `This cryptocurrency does not have enough liquidity ($${averageDailyVolume10Day} < $${cryptoMinimumDailyVolume}). This restriction is in place to prevent cheating.` });
 			return;
-		} else if (averageDailyVolume10Day < minimumAverageDailyVolume) {
-			res.status(400).send({ message: `This asset does not have enough liquidity ($${averageDailyVolume10Day} < $${minimumAverageDailyVolume}). This restriction is in place to prevent cheating.` });
+		} else if (averageDailyVolume10Day < minimumDailyVolume) {
+			res.status(400).send({ message: `This asset does not have enough liquidity ($${averageDailyVolume10Day} < $${minimumDailyVolume}). This restriction is in place to prevent cheating.` });
 			return;
 		} else if (!averageDailyVolume10Day) {
 			res.status(400).send({ message: `This asset does not have enough liquidity. This restriction is in place to prevent cheating.` });

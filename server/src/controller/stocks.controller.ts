@@ -68,6 +68,9 @@ const buyStock = async (req: Request, res: Response) => {
 		} else if (averageDailyVolume10Day < minimumAverageDailyVolume) {
 			res.status(400).send({ message: `This asset does not have enough liquidity ($${averageDailyVolume10Day} < $${minimumAverageDailyVolume}). This restriction is in place to prevent cheating.` });
 			return;
+		} else if (!averageDailyVolume10Day) {
+			res.status(400).send({ message: `This asset does not have enough liquidity. This restriction is in place to prevent cheating.` });
+			return;
 		}
 
 		let user = await User.findById(req.body.userId);

@@ -21,6 +21,8 @@ export const fetchStockData = async (demandedSymbol: string): Promise<any> => {
 				"regularMarketChangePercent",
 				"longName",
 				"regularMarketPreviousClose",
+				"quoteType",
+				"averageDailyVolume10Day",
 			],
 		});
 
@@ -30,6 +32,8 @@ export const fetchStockData = async (demandedSymbol: string): Promise<any> => {
 			regularMarketChangePercent,
 			longName,
 			regularMarketPreviousClose,
+			quoteType,
+			averageDailyVolume10Day,
 		} = quote;
 
 		if (demandedSymbol !== symbol) {
@@ -42,6 +46,8 @@ export const fetchStockData = async (demandedSymbol: string): Promise<any> => {
 			regularMarketPrice,
 			regularMarketPreviousClose,
 			regularMarketChangePercent,
+			quoteType,
+			averageDailyVolume10Day,
 		};
 
 		stockCache.set(symbol + "-quote", stockData);
@@ -55,6 +61,8 @@ export const fetchStockData = async (demandedSymbol: string): Promise<any> => {
 					regularMarketChangePercent,
 					longName,
 					regularMarketPreviousClose,
+					quoteType,
+					averageDailyVolume10Day,
 				} = result;
 	
 				if (demandedSymbol !== symbol) {
@@ -67,6 +75,8 @@ export const fetchStockData = async (demandedSymbol: string): Promise<any> => {
 					regularMarketPrice,
 					regularMarketPreviousClose,
 					regularMarketChangePercent,
+					quoteType,
+					averageDailyVolume10Day,
 				};
 	
 				stockCache.set(symbol + "-quote", stockData);

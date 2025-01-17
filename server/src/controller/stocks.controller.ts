@@ -10,6 +10,11 @@ import { ITransaction } from "../models/transaction.model";
 import { IPosition } from "../models/position.model";
 import yahooFinance from "yahoo-finance2";
 
+import dotenv from "dotenv";
+dotenv.config();
+const cryptoMinimumDailyVolume = parseInt(process.env.STOTRA_CRYPTO_MINIMUM_DAILY_VOLUME || "1000000");
+const minimumAverageDailyVolume = parseInt(process.env.STOTRA_MINIMUM_AVERAGE_DAILY_VOLUME || "100000");
+
 const getInfo = async (req: Request, res: Response) => {
 	/* 
 	#swagger.tags = ['Stock Data']
@@ -54,6 +59,16 @@ const buyStock = async (req: Request, res: Response) => {
 	try {
 		const data = await fetchStockData(symbol);
 		const price = data.regularMarketPrice;
+		const quoteType = data.quoteType;
+		const averageDailyVolume10Day = data.averageDailyVolume10Day;
+
+		if (quoteType === "CRYPTOCURRENCY" && averageDailyVolume10Day < cryptoMinimumDailyVolume) {
+			res.status(400).send({ message: `This cryptocurrency does not have enough liquidity ($${averageDailyVolume10Day} < $${cryptoMinimumDailyVolume}). This restriction is in place to prevent cheating.` });
+			return;
+		} else if (averageDailyVolume10Day < minimumAverageDailyVolume) {
+			res.status(400).send({ message: `This asset does not have enough liquidity ($${averageDailyVolume10Day} < $${minimumAverageDailyVolume}). This restriction is in place to prevent cheating.` });
+			return;
+		}
 
 		let user = await User.findById(req.body.userId);
 		user = user!;

@@ -19,6 +19,7 @@ This is a fork of the original project. The following changes have been made:
 - Added an info box to explain our users what this is
 - Fixed a bug discarding click events on search results
 - Added a notice indicating that the leaderboard is only updated every few minutes
+- Added a safeguard to prevent users from cheating by selling illiquid scam assets
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">

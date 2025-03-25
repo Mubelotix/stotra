@@ -38,7 +38,7 @@ export async function getLeaderboardTopN(
 		{ $group: { _id: "$positions.symbol" } },
 	]);
 	const uniqueSymbols: string[] = symbolsAggregation.map((entry) => entry._id);
-	console.log("Unique symbols:", uniqueSymbols);
+	console.log("Unique symbols:", JSON.stringify(uniqueSymbols));
 
 	// 2. Fetch stock prices in a single batch request
 	const stockDataPoints = await Promise.all(

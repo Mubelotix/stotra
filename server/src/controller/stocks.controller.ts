@@ -8,7 +8,6 @@ import {
 } from "../utils/requests";
 import { ITransaction } from "../models/transaction.model";
 import { IPosition } from "../models/position.model";
-import yahooFinance from "yahoo-finance2";
 
 import dotenv from "dotenv";
 dotenv.config();

@@ -6,7 +6,7 @@ const stockCache = new Cache({ stdTTL: 60 }); // 1 minute
 import dotenv from "dotenv";
 dotenv.config();
 
-yahooFinance.setGlobalConfig({ validation: { logErrors: false} });
+yahooFinance.setGlobalConfig({ validation: { logErrors: false}, queue: { concurrency: 1 } });
 
 export const fetchStockData = async (demandedSymbol: string): Promise<any> => {
 	const cachedData = stockCache.get(demandedSymbol + "-quote");

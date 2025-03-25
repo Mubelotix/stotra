@@ -4,11 +4,9 @@ const cors = require("cors");
 const rateLimit = require("express-rate-limit").rateLimit;
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
-import yahooFinance from "yahoo-finance2";
 
 // Config/initialization
 const app = express();
-// yahooFinance.setGlobalConfig({ validation: { logErrors: false } });
 dotenv.config();
 
 const PORT = process.env.PORT || 3010;

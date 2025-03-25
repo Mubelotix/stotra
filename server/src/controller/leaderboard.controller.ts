@@ -38,17 +38,25 @@ export async function getLeaderboardTopN(
 		{ $group: { _id: "$positions.symbol" } },
 	]);
 	const uniqueSymbols: string[] = symbolsAggregation.map((entry) => entry._id);
-	console.log("Unique symbols:", JSON.stringify(uniqueSymbols));
 
-	// 2. Fetch stock prices in a single batch request
-	const stockDataPoints = await Promise.all(
-		Array.from(uniqueSymbols).map((symbol) => fetchStockData(symbol)),
-	);
-
+	// 2. Fetch stock prices in batches of 100 with 55ms delay between them
 	const stockPrices: { [key: string]: number } = {};
-	stockDataPoints.forEach((dataPoint) => {
-		stockPrices[dataPoint.symbol] = dataPoint.regularMarketPrice;
-	});
+	async function fetchStockPricesInBatches() {
+		for (let i = 0; i < uniqueSymbols.length; i += 100) {
+			const batch = uniqueSymbols.slice(i, i + 100);
+			const dataPoints = await Promise.all(batch.map((symbol) => fetchStockData(symbol)));
+
+			dataPoints.forEach((dataPoint) => {
+				stockPrices[dataPoint.symbol] = dataPoint.regularMarketPrice;
+			});
+
+			// Wait 55ms before fetching the next batch, except for the last batch
+			if (i + 100 < uniqueSymbols.length) {
+				await new Promise((resolve) => setTimeout(resolve, 55));
+			}
+		}
+	}
+	await fetchStockPricesInBatches();
 
 	// 3. Compute portfolio values for each user using projection
 	const usersWithPositions = await User.find(

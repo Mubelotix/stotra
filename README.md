@@ -23,6 +23,7 @@ This is a fork of the original project. The following changes have been made:
 - Made the leaderboard scale to multiple hundred of unique quotes
 - Fixed the leadboard breaking entirely when a quote is removed
 - Fixed error messages not being displayed when loading the portfolio fails
+- Fixed positions duplicating when the same ticker is bought multiple times
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">

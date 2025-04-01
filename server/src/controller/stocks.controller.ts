@@ -91,15 +91,24 @@ const buyStock = async (req: Request, res: Response) => {
 
 			user.ledger.push(transaction);
 
-			// Add position to user
-			const position = {
-				symbol,
-				quantity,
-				purchasePrice: price,
-				purchaseDate: Date.now(),
-			} as IPosition;
+			// Update the existing position or create a new one
+			const existingPosition = user.positions.find(pos => pos.symbol === symbol);
 
-			user.positions.push(position);
+			if (existingPosition) {
+				existingPosition.purchasePrice = 
+					((existingPosition.purchasePrice * existingPosition.quantity) + (price * quantity)) /
+					(existingPosition.quantity + quantity);
+				existingPosition.quantity += quantity;
+			} else {
+				const position: IPosition = {
+					symbol,
+					quantity,
+					purchasePrice: price,
+					purchaseDate: Date.now(),
+				} as IPosition;
+
+				user.positions.push(position);
+			}
 
 			user
 				.save()

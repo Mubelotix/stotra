@@ -44,12 +44,16 @@ export async function getLeaderboardTopN(
 	async function fetchStockPricesInBatches() {
 		for (let i = 0; i < uniqueSymbols.length; i += 100) {
 			const batch = uniqueSymbols.slice(i, i + 100);
-			const dataPoints = await Promise.all(batch.map((symbol) => fetchStockData(symbol)));
+			const results = await Promise.allSettled(batch.map((symbol) => fetchStockData(symbol)));
 
-			dataPoints.forEach((dataPoint) => {
-				stockPrices[dataPoint.symbol] = dataPoint.regularMarketPrice;
+			results.forEach((result, index) => {
+				if (result.status === "fulfilled") {
+					stockPrices[batch[index]] = result.value.regularMarketPrice;
+				} else {
+					stockPrices[batch[index]] = 0; // Could not load this stock
+				}
 			});
-
+	
 			// Wait 55ms before fetching the next batch, except for the last batch
 			if (i + 100 < uniqueSymbols.length) {
 				await new Promise((resolve) => setTimeout(resolve, 55));

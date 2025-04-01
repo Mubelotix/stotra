@@ -44,6 +44,13 @@ function PortfolioPreview() {
 						isClosable: true,
 					});
 					navigate("/login");
+				} else {
+					toast({
+						title: `Error fetching portfolio data. Contact administrator.`,
+						description: err.response?.data?.message || "No message available.",
+						status: "error",
+						isClosable: true,
+					});
 				}
 			});
 	}, []);

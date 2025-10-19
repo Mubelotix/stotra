@@ -255,7 +255,10 @@ function TransactionPane(props: { symbol: string; price: number }) {
 						</Button>
 						<Center mt={3}>
 							<Text fontWeight="bold" fontSize="sm">
-								{formatter.format(buyingPower)} Buying Power Available
+								{isByValue 
+									? `${formatter.format(buyingPower)} Buying Power Available`
+									: `${sharesFormatter.format(Math.floor((buyingPower / (props.price * (1 + tradeFee))) * 100000000) / 100000000)} Shares Available to Buy`
+								}
 							</Text>
 						</Center>
 					</TabPanel>
@@ -288,7 +291,10 @@ function TransactionPane(props: { symbol: string; price: number }) {
 						</Button>
 						<Center mt={3}>
 							<Text fontWeight="bold" fontSize="sm">
-								{availableShares} Shares Available
+								{isByValue
+									? `${formatter.format(availableShares * props.price * (1 - tradeFee))} Available to Sell`
+									: `${sharesFormatter.format(availableShares)} Shares Available`
+								}
 							</Text>
 						</Center>
 					</TabPanel>

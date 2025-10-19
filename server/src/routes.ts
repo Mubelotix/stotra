@@ -2,7 +2,7 @@ import express from "express";
 const router = express.Router();
 import { authProxy } from "./middleware";
 import userController from "./controller/user.controller";
-import stocksController from "./controller/stocks.controller";
+import stocksController, { getTradeFee } from "./controller/stocks.controller";
 import newsController from "./controller/news.controller";
 import leaderboardController from "./controller/leaderboard.controller";
 
@@ -67,6 +67,7 @@ router.post(
 router.get("/api/stocks/search/:query", stocksController.search);
 router.get("/api/stocks/:symbol/info", stocksController.getInfo);
 router.get("/api/stocks/:symbol/historical", stocksController.getHistorical);
+router.get("/api/config/trade-fee", getTradeFee);
 
 router.post(
 	"/api/stocks/:symbol/buy",

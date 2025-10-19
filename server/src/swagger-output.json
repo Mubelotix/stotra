@@ -354,6 +354,16 @@
         }
       }
     },
+    "/api/config/trade-fee": {
+      "get": {
+        "description": "",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/stocks/{symbol}/buy": {
       "post": {
         "tags": [
@@ -399,6 +409,9 @@
                     "example": "any"
                   },
                   "quantity": {
+                    "example": "any"
+                  },
+                  "amount": {
                     "example": "any"
                   }
                 }

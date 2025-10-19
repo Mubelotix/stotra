@@ -19,6 +19,20 @@ function makeTransaction(
 		});
 }
 
+function makeBuyByAmount(symbol: string, amount: number): Promise<string> {
+	return api
+		.post("/stocks/" + symbol + "/buy", {
+			amount,
+		})
+		.then((res) => res.data.message)
+		.catch((err) => {
+			if (err.response?.data?.message) {
+				throw new Error(err.response.data.message);
+			}
+			throw new Error("Failed to place buy order by amount");
+		});
+}
+
 function getPositions(): Promise<Position[]> {
 	return api
 		.get("/user/holdings")
@@ -133,13 +147,26 @@ function getAvailableShares(symbol: string): Promise<number> {
 		});
 }
 
+function getTradeFee(): Promise<number> {
+	return api
+		.get("/config/trade-fee")
+		.then((res) => res.data.fee as number)
+		.catch((err) => {
+			// If backend doesn't support fee endpoint, default to 0 for UI continuity
+			console.warn("Unable to fetch trade fee, defaulting to 0", err);
+			return 0;
+		});
+}
+
 export default {
 	makeTransaction,
+	makeBuyByAmount,
 	getPositions,
 	getWatchlist,
 	getUsername,
 	editWatchlist,
 	getPortfolio,
 	getBuyingPower,
-	getAvailableShares
+	getAvailableShares,
+	getTradeFee,
 };

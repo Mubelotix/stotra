@@ -55,6 +55,7 @@ const buyStock = async (req: Request, res: Response) => {
 	*/
 	const symbol = req.params.symbol;
 	const quantity = req.body.quantity;
+	const amount = req.body.amount as number | undefined; // optional inclusive-amount semantics
 
 	try {
 		const data = await fetchStockData(symbol);
@@ -75,17 +76,70 @@ const buyStock = async (req: Request, res: Response) => {
 
 		let user = await User.findById(req.body.userId);
 		user = user!;
+		// If amount is provided, use inclusive fee semantics: deduct 'amount' from cash, fee reduces shares obtained
+		if (amount && amount > 0) {
+			const feeAmount = amount * tradeFee;
+			const netForAsset = amount - feeAmount;
+			const qtyFromAmount = netForAsset / price;
 
-		const buyAmount = price * quantity;
-		const feeAmount = buyAmount * tradeFee;
+			if (user.cash! < amount) {
+				res.status(400).send({ message: "Not enough cash (insufficient buying power)" });
+				return;
+			}
 
-		if (user.cash! < buyAmount + feeAmount) {
-			res.status(400).send({ message: "Not enough cash (including trade fee)" });
-			return;
+			user.cash! -= amount;
+
+			const transaction: ITransaction = {
+				symbol,
+				price,
+				quantity: qtyFromAmount,
+				fee: feeAmount,
+				type: "buy",
+				date: Date.now(),
+			} as ITransaction;
+
+			user.ledger.push(transaction);
+
+			const existingPosition = user.positions.find(pos => pos.symbol === symbol);
+			if (existingPosition) {
+				existingPosition.purchasePrice =
+					((existingPosition.purchasePrice * existingPosition.quantity) + (price * qtyFromAmount)) /
+					(existingPosition.quantity + qtyFromAmount);
+				existingPosition.quantity += qtyFromAmount;
+			} else {
+				const position: IPosition = {
+					symbol,
+					quantity: qtyFromAmount,
+					purchasePrice: price,
+					purchaseDate: Date.now(),
+				} as IPosition;
+				user.positions.push(position);
+			}
+
+			user
+				.save()
+				.then((user) => {
+					if (user) {
+						res.status(200).send({ message: "Stock was bought successfully!" });
+					}
+				})
+				.catch((err) => {
+					if (err) {
+						res.status(500).send({ message: err });
+					}
+				});
 		} else {
+			// Default: quantity-based, fee added on top (legacy behavior)
+			const buyAmount = price * quantity;
+			const feeAmount = buyAmount * tradeFee;
+
+			if (user.cash! < buyAmount + feeAmount) {
+				res.status(400).send({ message: "Not enough cash (including trade fee)" });
+				return;
+			}
+
 			user.cash! -= buyAmount + feeAmount;
 
-			// Add buy transaction to ledger (record fee)
 			const transaction: ITransaction = {
 				symbol,
 				price,
@@ -97,11 +151,10 @@ const buyStock = async (req: Request, res: Response) => {
 
 			user.ledger.push(transaction);
 
-			// Update the existing position or create a new one
 			const existingPosition = user.positions.find(pos => pos.symbol === symbol);
 
 			if (existingPosition) {
-				existingPosition.purchasePrice = 
+				existingPosition.purchasePrice =
 					((existingPosition.purchasePrice * existingPosition.quantity) + (price * quantity)) /
 					(existingPosition.quantity + quantity);
 				existingPosition.quantity += quantity;
@@ -239,3 +292,8 @@ const search = async (req: Request, res: Response) => {
 };
 
 export default { getInfo, getHistorical, buyStock, sellStock, search };
+
+// Export fee for routes to use
+export const getTradeFee = async (_req: Request, res: Response) => {
+	res.status(200).send({ fee: tradeFee });
+};

@@ -8,7 +8,7 @@ const getLedger = (req: Request, res: Response) => {
 	/* 
 	#swagger.tags = ['User Data']
 	*/
-	User.findById(req.body.userId)
+	User.findById((req as any).userId)
 		.then((user) => {
 			res.status(200).json({ ledger: user!.ledger });
 		})
@@ -21,7 +21,7 @@ const getHoldings = (req: Request, res: Response) => {
 	/* 
 	#swagger.tags = ['User Data']
 	*/
-	User.findById(req.body.userId)
+	User.findById((req as any).userId)
 		.then((user) => {
 			res.status(200).json({ positions: user!.positions, cash: user!.cash });
 		})
@@ -34,7 +34,7 @@ const getUsername = (req: Request, res: Response) => {
 	/* 
 	#swagger.tags = ['User Data']
 	*/
-	User.findById(req.body.userId)
+	User.findById((req as any).userId)
 		.then((user) => {
 			res.status(200).json({ username: user!.username });
 		})
@@ -47,7 +47,7 @@ const getPortfolio = async (req: Request, res: Response) => {
 	/* 
 	#swagger.tags = ['User Data']
 	*/
-	let user: IUser | null = await User.findById(req.body.userId);
+	let user: IUser | null = await User.findById((req as any).userId);
 	if (!user) {
 		res.status(500).json({ message: "User not found" });
 	}
@@ -87,7 +87,7 @@ const getPortfolio = async (req: Request, res: Response) => {
             );
             if (positionLiveData) {
                 listOfPositions.push({
-                    ...position,
+                    ...position.toObject(),
                     ...positionLiveData,
                 });
             }
@@ -117,9 +117,9 @@ const getWatchlist = (req: Request, res: Response) => {
 	/* 
 	#swagger.tags = ['User Watchlist']
 	*/
-	User.findById(req.body.userId)
+	User.findById((req as any).userId)
 		.then((user) => {
-			if (req.body.raw === "true") {
+			if (req.query.raw === "true") {
 				res.status(200).json({ watchlist: user!.watchlist });
 			} else {
 				// Get the current price of each stock in the watchlist
@@ -141,7 +141,7 @@ const addToWatchlist = (req: Request, res: Response) => {
 	/* 
 	#swagger.tags = ['User Watchlist']
 	*/
-	User.findById(req.body.userId)
+	User.findById((req as any).userId)
 		.then((user) => {
 			if (user!.watchlist.includes(req.params.symbol)) {
 				res.status(400).json({ message: "Already in watchlist" });
@@ -160,7 +160,7 @@ const removeFromWatchlist = (req: Request, res: Response) => {
 	/* 
 	#swagger.tags = ['User Watchlist']
 	*/
-	User.findById(req.body.userId)
+	User.findById((req as any).userId)
 		.then((user) => {
 			if (user!.watchlist.includes(req.params.symbol)) {
 				user!.watchlist = user!.watchlist.filter(

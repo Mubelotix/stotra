@@ -149,6 +149,15 @@
           "User Watchlist"
         ],
         "description": "",
+        "parameters": [
+          {
+            "name": "raw",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"

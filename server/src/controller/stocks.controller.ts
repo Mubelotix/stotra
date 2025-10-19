@@ -74,7 +74,7 @@ const buyStock = async (req: Request, res: Response) => {
 			return;
 		}
 
-		let user = await User.findById(req.body.userId);
+		let user = await User.findById((req as any).userId);
 		user = user!;
 		// If amount is provided, use inclusive fee semantics: deduct 'amount' from cash, fee reduces shares obtained
 		if (amount && amount > 0) {
@@ -199,7 +199,7 @@ const sellStock = async (req: Request, res: Response) => {
 		const data = await fetchStockData(symbol);
 		const price = data.regularMarketPrice;
 
-		let user = await User.findById(req.body.userId);
+		let user = await User.findById((req as any).userId);
 		user = user!;
 
 		// Check if user has enough shares to sell across all positions

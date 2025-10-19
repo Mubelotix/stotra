@@ -60,7 +60,13 @@ export async function verifyToken(
 		const userId = await getOrCreateUserId(username);
 
 		// Attach the userId to the request object for downstream use
-		req.body.userId = userId;
+		// Use a custom property instead of req.body to support GET requests
+		(req as any).userId = userId;
+		
+		// Also set it on req.body if it exists (for POST/PUT requests)
+		if (req.body) {
+			req.body.userId = userId;
+		}
 
 		// Continue to the next middleware or route handler
 		next();

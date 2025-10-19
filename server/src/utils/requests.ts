@@ -132,7 +132,8 @@ export const fetchHistoricalStockData = async (
 					.sort((a, b) => a[0] - b[0]);
 			} else {
 				const yahooData = await yahooFinance.historical(symbol, {
-					period1: "2000-01-01",
+					period1: new Date("2000-01-01"),
+					period2: new Date(),
 					interval: "1d",
 				});
 

@@ -47,7 +47,7 @@ const getPortfolio = async (req: Request, res: Response) => {
 	/* 
 	#swagger.tags = ['User Data']
 	*/
-	let user: IUser | null = await User.findById(req.body.userId).lean();
+	let user: IUser | null = await User.findById(req.body.userId);
 	if (!user) {
 		res.status(500).json({ message: "User not found" });
 	}

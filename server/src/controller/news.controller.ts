@@ -1,10 +1,9 @@
-import yahooFinance from "yahoo-finance2";
 import { Request, Response } from "express";
-import { SearchOptions } from "yahoo-finance2/dist/esm/src/modules/search";
+import { SearchOptions } from "yahoo-finance2/script/src/modules/search";
+import { yahooFinance } from "../utils/requests";
 
 import dotenv from "dotenv";
 dotenv.config();
-
 const { SearchApi } = require("financial-news-api");
 const searchApi = SearchApi(process.env.STOTRA_NEWSFILTER_API);
 

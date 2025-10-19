@@ -1,12 +1,14 @@
-import yahooFinance from "yahoo-finance2";
+import YahooFinance from "yahoo-finance2";
 import Cache from "node-cache";
 import axios from "axios";
 const stockCache = new Cache({ stdTTL: 60 }); // 1 minute
 
 import dotenv from "dotenv";
 dotenv.config();
-
-yahooFinance.setGlobalConfig({ validation: { logErrors: false}, queue: { concurrency: 1 } });
+export const yahooFinance = new YahooFinance({
+	validation: { logErrors: false},
+	queue: { concurrency: 1 }
+});
 
 export const fetchStockData = async (demandedSymbol: string): Promise<any> => {
 	const cachedData = stockCache.get(demandedSymbol + "-quote");

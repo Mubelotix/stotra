@@ -28,6 +28,10 @@ const formatter = new Intl.NumberFormat("en-US", {
 	currency: "USD",
 });
 
+const sharesFormatter = new Intl.NumberFormat("en-US", {
+	maximumFractionDigits: 8,
+});
+
 function TransactionPane(props: { symbol: string; price: number }) {
 	const [count, setCount] = useState(1);
 	const [buyingPower, setBuyingPower] = useState(0);
@@ -206,7 +210,7 @@ function TransactionPane(props: { symbol: string; price: number }) {
 							<HStack>
 								<Text>Estimated Shares</Text>
 								<Spacer />
-								<Text>{isFinite(estimatedShares) ? estimatedShares.toFixed(8) : "-"}</Text>
+								<Text>{isFinite(estimatedShares) ? sharesFormatter.format(estimatedShares) : "-"}</Text>
 							</HStack>
 							<HStack fontWeight="bold">
 								<Text>Total Debited</Text>
@@ -265,7 +269,7 @@ function TransactionPane(props: { symbol: string; price: number }) {
 							<HStack>
 								<Text>Estimated Shares</Text>
 								<Spacer />
-								<Text>{isFinite(estimatedShares) ? estimatedShares.toFixed(8) : "-"}</Text>
+								<Text>{isFinite(estimatedShares) ? sharesFormatter.format(estimatedShares) : "-"}</Text>
 							</HStack>
 							<HStack fontWeight="bold">
 								<Text>Net Credit</Text>

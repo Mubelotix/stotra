@@ -4,6 +4,7 @@ export interface ITransaction extends Document {
 	symbol: string;
 	price: number;
 	quantity: number;
+	fee?: number;
 	type: string;
 	date: number;
 }
@@ -24,6 +25,12 @@ export const TransactionSchema = new Schema<ITransaction>({
 		type: Number,
 		required: true,
 		min: 0.000000001, // The quantity should not be negative
+	},
+	fee: {
+		type: Number,
+		required: false,
+		min: 0,
+		default: 0,
 	},
 	type: {
 		type: String,

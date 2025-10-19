@@ -13,6 +13,7 @@ import dotenv from "dotenv";
 dotenv.config();
 const cryptoMinimumDailyVolume = parseInt(process.env.STOTRA_CRYPTO_MINIMUM_DAILY_VOLUME || "1000000");
 const minimumDailyVolume = parseInt(process.env.STOTRA_MINIMUM_DAILY_VOLUME || "100000");
+const tradeFee = parseFloat(process.env.STOTRA_TRADE_FEE || process.env.TRADE_FEE || "0.001"); // default 0.1% = 0.001
 
 const getInfo = async (req: Request, res: Response) => {
 	/* 
@@ -75,16 +76,21 @@ const buyStock = async (req: Request, res: Response) => {
 		let user = await User.findById(req.body.userId);
 		user = user!;
 
-		if (user.cash! < price * quantity) {
-			res.status(400).send({ message: "Not enough cash" });
-		} else {
-			user.cash! -= price * quantity;
+		const buyAmount = price * quantity;
+		const feeAmount = buyAmount * tradeFee;
 
-			// Add sebuyll transaction to ledger
+		if (user.cash! < buyAmount + feeAmount) {
+			res.status(400).send({ message: "Not enough cash (including trade fee)" });
+			return;
+		} else {
+			user.cash! -= buyAmount + feeAmount;
+
+			// Add buy transaction to ledger (record fee)
 			const transaction: ITransaction = {
 				symbol,
 				price,
 				quantity,
+				fee: feeAmount,
 				type: "buy",
 				date: Date.now(),
 			} as ITransaction;
@@ -156,13 +162,17 @@ const sellStock = async (req: Request, res: Response) => {
 			return;
 		}
 
-		user.cash! += price * quantity;
+		const sellAmount = price * quantity;
+		const sellFee = sellAmount * tradeFee;
 
-		// Add sell transaction to ledger
+		user.cash! += sellAmount - sellFee;
+
+		// Add sell transaction to ledger (record fee)
 		const transaction: ITransaction = {
 			symbol,
 			price,
 			quantity,
+			fee: sellFee,
 			type: "sell",
 			date: Date.now(),
 		} as ITransaction;

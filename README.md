@@ -24,6 +24,7 @@ This is a fork of the original project. The following changes have been made:
 - Fixed the leadboard breaking entirely when a quote is removed
 - Fixed error messages not being displayed when loading the portfolio fails
 - Fixed positions duplicating when the same ticker is bought multiple times
+- Mitigated exploits in price delay by charging fees on each trade
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">
@@ -113,6 +114,7 @@ STOTRA_USERNAME_HEADER=x-username
 STOTRA_STARTING_CASH=100000
 STOTRA_LOGIN_URL=https://your-authentication-proxy.com/login
 STOTRA_LOGOUT_URL=https://your-authentication-proxy.com/logout
+STOTRA_TRADE_FEE=0.002 # 0.2% trade fee
 # Optional: (for real-time news and stock data)
 STOTRA_NEWSFILTER_API=<api key for news descriptions>
 STOTRA_ALPHAVANTAGE_API=<api key for real-time stock data>

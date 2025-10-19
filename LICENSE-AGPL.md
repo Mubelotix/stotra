@@ -1,7 +1,3 @@
-**This fork is distributed under the terms of the GNU Affero General Public License v3.0.**
-**Portions of this work remain under the MIT License; see LICENSE-MIT for details.**
-
-
                     GNU AFFERO GENERAL PUBLIC LICENSE
                        Version 3, 19 November 2007
 

@@ -170,4 +170,6 @@ Give a ⭐️ if this project helped you!
 
 ## 📝 License
 
-This project is [MIT License](https://github.com/spikecodes/stotra/blob/main/LICENSE) licensed.
+Contributions from the original author (Spike) are licensed under the [MIT License](https://github.com/spikecodes/stotra/blob/main/LICENSE).
+
+Contributions on this fork are licensed under the [AGPLv3 License](https://www.gnu.org/licenses/agpl-3.0.en.html).

@@ -1,7 +1,7 @@
 const morgan = require("morgan"); //import morgan
 const { log } = require("mercedlogger"); // import mercedlogger's log function
 const cors = require("cors");
-const rateLimit = require("express-rate-limit").rateLimit;
+const { rateLimit, ipKeyGenerator } = require("express-rate-limit");
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
 
@@ -31,7 +31,10 @@ const apiLimiter = rateLimit({
 	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
 	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 	keyGenerator: (req: any) => {
-		return IP_HEADER ? req.headers[IP_HEADER] || req.ip : req.ip;
+		// Get the IP from the header set by nginx, or fallback to req.ip
+		const ip = IP_HEADER ? req.headers[IP_HEADER] || req.ip : req.ip;
+		// Normalize IPv6 addresses to prevent bypass attacks
+		return ipKeyGenerator(ip);
 	},
 });
 

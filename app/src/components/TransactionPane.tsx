@@ -107,9 +107,11 @@ function TransactionPane(props: { symbol: string; price: number }) {
 		} else {
 			const netDesired = count;
 			const denom = props.price * Math.max(1 - tradeFee, 1e-12);
-			return netDesired / denom;
+			const shares = netDesired / denom;
+			// Cap at available shares to handle rounding issues
+			return Math.min(shares, availableShares);
 		}
-	}, [isByValue, count, props.price, tradeFee, tabIndex]);
+	}, [isByValue, count, props.price, tradeFee, tabIndex, availableShares]);
 
 	const grossAmount = useMemo(() => {
 		if (!isByValue) return props.price * count;

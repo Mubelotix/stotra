@@ -26,6 +26,7 @@ This is a fork of the original project. The following changes have been made:
 - Fixed positions duplicating when the same ticker is bought multiple times
 - Mitigated exploits in price delay by charging fees on each trade
 - Improved information displayed in the transaction pane
+- Mitigated exploits of missing significant digits in price data
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">

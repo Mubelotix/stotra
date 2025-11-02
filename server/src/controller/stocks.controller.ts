@@ -5,6 +5,7 @@ import {
 	fetchStockData,
 	fetchHistoricalStockData,
 	searchStocks,
+	hasOneSignificantDigit,
 } from "../utils/requests";
 import { ITransaction } from "../models/transaction.model";
 import { IPosition } from "../models/position.model";
@@ -71,6 +72,12 @@ const buyStock = async (req: Request, res: Response) => {
 			return;
 		} else if (!averageDailyVolume10Day) {
 			res.status(400).send({ message: `This asset does not have enough liquidity. This restriction is in place to prevent cheating.` });
+			return;
+		}
+
+		// Prevent buys for symbols with only one significant digit in price (likely inaccurate/rounded data)
+		if (typeof price === "number" && hasOneSignificantDigit(price)) {
+			res.status(400).send({ message: `This asset's price appears to have only one significant digit (price: ${price}). This may indicate inaccurate data; buying is disabled.` });
 			return;
 		}
 

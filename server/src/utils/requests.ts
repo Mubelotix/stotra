@@ -175,3 +175,23 @@ export const searchStocks = async (query: string): Promise<any> => {
 			}
 		});
 };
+
+/**
+ * Detect if a numeric price has only one significant digit.
+ * Examples that return true: 1000, 500, 10, 5, 0.5, 0.05
+ * Examples that return false: 1200, 123, 1.23, 0.52
+ */
+export const hasOneSignificantDigit = (value: number): boolean => {
+	if (!isFinite(value) || value <= 0) return false;
+
+	const abs = Math.abs(value);
+	// exponent (power of ten)
+	const exponent = Math.floor(Math.log10(abs));
+	const pow = Math.pow(10, exponent);
+	const mantissa = abs / pow; // should be in [1, 10)
+
+	// If mantissa is an integer 1..9 (within float tolerance) then value has a single significant digit.
+	const rounded = Math.round(mantissa);
+	const eps = 1e-9;
+	return rounded >= 1 && rounded <= 9 && Math.abs(mantissa - rounded) < eps;
+};

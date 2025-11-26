@@ -73,12 +73,6 @@ const getPortfolio = async (req: Request, res: Response) => {
     try {
         const values = await Promise.all(symbols.map((symbol) => fetchStockData(symbol)));
 
-        // Sum up the value of all positions
-        values.forEach((value, i) => {
-            portfolioValue += value.regularMarketPrice * quantities[i];
-            portfolioPrevCloseValue += value.regularMarketPreviousClose * quantities[i];
-        });
-
         // Create list of positions to send to frontend with data from positions plus the properties from the fetchStockData response
 		let listOfPositions: any[] = [];
         positions.forEach((position) => {
@@ -86,10 +80,14 @@ const getPortfolio = async (req: Request, res: Response) => {
                 (value) => value.symbol === position.symbol,
             );
             if (positionLiveData) {
-                listOfPositions.push({
-                    ...position.toObject(),
-                    ...positionLiveData,
-                });
+				if (position.quantity * positionLiveData.regularMarketPrice >= 0.10) {
+					listOfPositions.push({
+						...position.toObject(),
+						...positionLiveData,
+					});
+					portfolioValue += position.quantity * positionLiveData.regularMarketPrice;
+					portfolioPrevCloseValue += position.quantity * positionLiveData.regularMarketPreviousClose;
+				}
             }
         });
 

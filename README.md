@@ -27,6 +27,7 @@ This is a fork of the original project. The following changes have been made:
 - Mitigated exploits in price delay by charging fees on each trade
 - Improved information displayed in the transaction pane
 - Mitigated exploits of missing significant digits in price data
+- Fixed positions with dust amounts being displayed
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">

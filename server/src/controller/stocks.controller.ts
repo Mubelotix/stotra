@@ -244,6 +244,11 @@ const sellStock = async (req: Request, res: Response) => {
 			if (user.positions[i].symbol === symbol) {
 				if (user.positions[i].quantity > quantity) {
 					user.positions[i].quantity -= quantity;
+					// Fix floating point precision issues where quantity becomes extremely small but non-zero
+					if (user.positions[i].quantity < 1e-9) {
+						user.positions.splice(i, 1);
+						i--;
+					}
 					break;
 				} else {
 					quantity -= user.positions[i].quantity;

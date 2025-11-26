@@ -28,6 +28,7 @@ This is a fork of the original project. The following changes have been made:
 - Improved information displayed in the transaction pane
 - Mitigated exploits of missing significant digits in price data
 - Fixed positions with dust amounts being displayed
+- Fixed floating point precision issues when selling shares
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">

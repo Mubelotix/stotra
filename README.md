@@ -29,6 +29,7 @@ This is a fork of the original project. The following changes have been made:
 - Mitigated exploits of missing significant digits in price data
 - Fixed positions with dust amounts being displayed
 - Fixed floating point precision issues when selling shares
+- Added rate limits to prevent getting banned by Yahoo Finance
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">
@@ -82,7 +83,7 @@ The accent color defaults to Chakra's "Pink 500", which can be changed in the ap
 
 ### Prerequisites
 
-- Node.js (v14.18+)
+- Node.js (v22+)
 - MongoDB
   - I used [MongoDB Atlas](https://www.mongodb.com/basics/get-started) for the demo version
 

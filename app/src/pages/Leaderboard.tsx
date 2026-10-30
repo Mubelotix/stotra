@@ -75,7 +75,7 @@ function Leaderboard() {
 				</Tbody>
 			</Table>
 			<Text mt={4} fontSize="sm" color="gray.500">
-				The leaderboard is updated every few minutes.
+				The leaderboard is updated gradually.
 			</Text>
 		</Box>
 	);

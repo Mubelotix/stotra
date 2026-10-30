@@ -2,9 +2,13 @@
 	"name": "stotra-backend",
 	"version": "0.0.0",
 	"private": true,
+	"engines": {
+		"node": ">=22"
+	},
 	"scripts": {
 		"start": "node ./dist/index.js",
 		"tsc": "tsc",
+		"test": "npm run tsc && node --test test/*.test.js",
 		"postinstall": "npm run tsc",
 		"dev": "ts-node-dev --respawn --pretty --transpile-only ./src/index.ts"
 	},
@@ -22,7 +26,7 @@
 		"node-cache": "^5.1.2",
 		"swagger-jsdoc": "^6.2.8",
 		"swagger-ui-express": "^5.0.0",
-		"yahoo-finance2": "^3.10.0"
+		"yahoo-finance2": "^4.0.5"
 	},
 	"devDependencies": {
 		"@types/bcrypt": "^5.0.0",

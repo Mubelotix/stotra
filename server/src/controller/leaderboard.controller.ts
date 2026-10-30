@@ -1,78 +1,33 @@
 import { Request, Response } from "express";
 import User from "../models/user.model";
-import { fetchStockData } from "../utils/requests";
+import Quote from "../models/quote.model";
 
-import dotenv from "dotenv";
-dotenv.config();
-const leaderboardCacheTTL = parseInt(process.env.STOTRA_LEADERBOARD_CACHE_TTL || "600");
-
-import NodeCache from "node-cache";
-const cache = new NodeCache({ stdTTL: leaderboardCacheTTL });
-
-const getLeaderboard = (req: Request, res: Response) => {
-	/* 
+const getLeaderboard = async (_req: Request, res: Response) => {
+	/*
 	#swagger.tags = ['Leaderboard']
 	*/
-	if (cache.has("leaderboard")) {
-		const leaderboard = cache.get("leaderboard");
-		res.status(200).send({ users: leaderboard });
-		return;
+	try {
+		res.status(200).send({ users: await getLeaderboardTopN(-1) });
+	} catch (error: any) {
+		res.status(500).send({ message: error.message });
 	}
-
-	getLeaderboardTopN(-1)
-		.then((users) => {
-			cache.set("leaderboard", users);
-			res.status(200).send({ users });
-		})
-		.catch((err: { message: any }) => {
-			res.status(500).send({ message: err.message });
-		});
 };
 
-export async function getLeaderboardTopN(
-	n: number,
-): Promise<{ username: string; value: number }[]> {
-	// 1. Collate all unique stock symbols from users' positions using Aggregation
-	const symbolsAggregation = await User.aggregate([
-		{ $unwind: "$positions" },
-		{ $group: { _id: "$positions.symbol" } },
-	]);
-	const uniqueSymbols: string[] = symbolsAggregation.map((entry) => entry._id);
-
-	// 2. Fetch stock prices
-	const stockPrices: { [key: string]: number } = {};
-	const results = await Promise.allSettled(
-		uniqueSymbols.map((symbol) => fetchStockData(symbol))
-	);
-
-	results.forEach((result, index) => {
-		if (result.status === "fulfilled") {
-			stockPrices[uniqueSymbols[index]] = result.value.regularMarketPrice;
-		} else {
-			stockPrices[uniqueSymbols[index]] = 0; // Could not load this stock
-		}
-	});
-
-	// 3. Compute portfolio values for each user using projection
-	const usersWithPositions = await User.find(
-		{},
-		{ username: 1, positions: 1, cash: 1 },
-	);
-
-	const userValues: { username: string; value: number }[] = [];
-	usersWithPositions.forEach((user) => {
-		let totalValue = user.cash;
-		user.positions.forEach((position) => {
-			const currentPrice = stockPrices[position.symbol];
-			totalValue += currentPrice * position.quantity;
-		});
-		userValues.push({ username: user.username, value: totalValue });
-	});
-
-	// 5. Sort and pick top N users
-	userValues.sort((a, b) => b.value - a.value);
-
-	return userValues;
+export async function getLeaderboardTopN(n: number): Promise<{ username: string; value: number }[]> {
+	const users = await User.find({}, { username: 1, positions: 1, cash: 1 });
+	const symbols = [...new Set(users.flatMap(user => user.positions.map(position => position.symbol)))];
+	// Never contact Yahoo here: ranks use the last known persisted prices, even if stale.
+	const quotes = await Quote.find({ _id: { $in: symbols } }).lean();
+	const prices = new Map(quotes.map(quote => [quote._id, quote.data?.regularMarketPrice ?? 0]));
+	const values = users.map(user => ({
+		username: user.username,
+		value: user.positions.reduce(
+			(total, position) => total + (prices.get(position.symbol) ?? 0) * position.quantity,
+			user.cash,
+		),
+	}));
+	values.sort((a, b) => b.value - a.value);
+	return n < 0 ? values : values.slice(0, n);
 }
 
 export default { getLeaderboard };

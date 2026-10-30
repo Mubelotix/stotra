@@ -59,7 +59,7 @@ const buyStock = async (req: Request, res: Response) => {
 	const amount = req.body.amount as number | undefined; // optional inclusive-amount semantics
 
 	try {
-		const data = await fetchStockData(symbol);
+		const data = await fetchStockData(symbol, true);
 		const price = data.regularMarketPrice;
 		const quoteType = data.quoteType;
 		const averageDailyVolume10Day = data.averageDailyVolume10Day;
@@ -203,7 +203,7 @@ const sellStock = async (req: Request, res: Response) => {
 	var quantity = req.body.quantity;
 
 	try {
-		const data = await fetchStockData(symbol);
+		const data = await fetchStockData(symbol, true);
 		const price = data.regularMarketPrice;
 
 		let user = await User.findById((req as any).userId);

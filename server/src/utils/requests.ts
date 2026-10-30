@@ -1,98 +1,77 @@
 import YahooFinance from "yahoo-finance2";
 import Cache from "node-cache";
 import axios from "axios";
+import Quote, { CachedQuote, StockData } from "../models/quote.model";
+import { reserveQuoteRefresh } from "./quoteRefreshLimit";
 const stockCache = new Cache({ stdTTL: 60 }); // 1 minute
 
 import dotenv from "dotenv";
 dotenv.config();
 export const yahooFinance = new YahooFinance({
-	validation: { logErrors: false},
-	queue: { concurrency: 1 }
+	validation: { logErrors: false },
+	queue: { concurrency: 1, interval: 1000 },
 });
 
-export const fetchStockData = async (demandedSymbol: string): Promise<any> => {
-	const cachedData = stockCache.get(demandedSymbol + "-quote");
-	if (cachedData) {
-		return cachedData;
-	}
+const quoteTTL = 60 * 1000;
+const pendingQuotes = new Map<string, Promise<CachedQuote | null>>();
 
+export function unknownStockData(symbol: string): StockData {
+	return {
+		symbol,
+		longName: symbol,
+		regularMarketPrice: 0,
+		regularMarketPreviousClose: 0,
+		regularMarketChangePercent: 0,
+		quoteType: "",
+		averageDailyVolume10Day: 0,
+	};
+}
+
+async function loadQuote(symbol: string): Promise<CachedQuote | null> {
+	const cached = await Quote.findById(symbol).lean();
+	if (cached?.attemptedAt && Date.now() - cached.attemptedAt.getTime() < quoteTTL) {
+		return cached;
+	}
+	if (!await reserveQuoteRefresh()) return cached;
+
+	// Persist the attempt before contacting Yahoo, so failures/restarts cannot retry freely.
+	await Quote.updateOne({ _id: symbol }, { $set: { attemptedAt: new Date() } }, { upsert: true });
 	try {
-		const quote = await yahooFinance.quoteCombine(demandedSymbol, {
-			fields: [
-				"regularMarketPrice",
-				"regularMarketChangePercent",
-				"longName",
-				"regularMarketPreviousClose",
-				"quoteType",
-				"averageDailyVolume10Day",
-			],
-		});
-
-		const {
-			symbol,
-			regularMarketPrice,
-			regularMarketChangePercent,
-			longName,
-			regularMarketPreviousClose,
-			quoteType,
-			averageDailyVolume10Day,
-		} = quote;
-
-		if (demandedSymbol !== symbol) {
-			throw new Error("Symbol mismatch");
+		const quote = await yahooFinance.quoteCombine(symbol);
+		const price = quote.regularMarketPrice;
+		if (quote.symbol !== symbol || typeof price !== "number" || !Number.isFinite(price) || price <= 0) {
+			throw new Error("Missing or invalid price for " + symbol);
 		}
-
-		const stockData = {
+		const data: StockData = {
 			symbol,
-			longName,
-			regularMarketPrice,
-			regularMarketPreviousClose,
-			regularMarketChangePercent,
-			quoteType,
-			averageDailyVolume10Day,
+			longName: quote.longName ?? quote.shortName ?? symbol,
+			regularMarketPrice: price,
+			regularMarketPreviousClose: quote.regularMarketPreviousClose ?? 0,
+			regularMarketChangePercent: quote.regularMarketChangePercent ?? 0,
+			quoteType: quote.quoteType ?? "",
+			averageDailyVolume10Day: quote.averageDailyVolume10Day ?? 0,
 		};
-
-		stockCache.set(symbol + "-quote", stockData);
-		return stockData;
-	} catch (err: any) {
-		if (err.result && Array.isArray(err.result)) {
-			for (let result of err.result) {				
-				const {
-					symbol,
-					regularMarketPrice,
-					regularMarketChangePercent,
-					longName,
-					regularMarketPreviousClose,
-					quoteType,
-					averageDailyVolume10Day,
-				} = result;
-	
-				if (demandedSymbol !== symbol) {
-					continue;
-				}
-	
-				const stockData = {
-					symbol,
-					longName,
-					regularMarketPrice,
-					regularMarketPreviousClose,
-					regularMarketChangePercent,
-					quoteType,
-					averageDailyVolume10Day,
-				};
-	
-				stockCache.set(symbol + "-quote", stockData);
-				return stockData;	
-			}
-			console.error("No results found for " + demandedSymbol);
-			throw new Error("No results found for " + demandedSymbol);
-		} else {
-			console.error(err);
-			console.error("Error fetching " + demandedSymbol + " stock data:", err);
-			throw new Error(err);
-		}
+		const updatedAt = new Date();
+		await Quote.updateOne({ _id: symbol }, { $set: { data, updatedAt } });
+		return { _id: symbol, data, updatedAt };
+	} catch (error) {
+		console.error("Error refreshing " + symbol + ":", error);
+		return cached;
 	}
-};
+}
+
+export async function fetchStockData(symbol: string, requireFresh = false): Promise<StockData> {
+	let pending = pendingQuotes.get(symbol);
+	if (!pending) {
+		pending = loadQuote(symbol).finally(() => pendingQuotes.delete(symbol));
+		pendingQuotes.set(symbol, pending);
+	}
+	const quote = await pending;
+	if (requireFresh && (!quote?.updatedAt || Date.now() - quote.updatedAt.getTime() >= quoteTTL || (quote.data?.regularMarketPrice ?? 0) <= 0)) {
+		throw new Error("A fresh price is unavailable. Please try trading again later.");
+	}
+	return quote?.data ?? unknownStockData(symbol);
+}
 
 export const fetchHistoricalStockData = async (
 	symbol: string,

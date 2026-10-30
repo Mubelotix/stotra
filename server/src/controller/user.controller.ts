@@ -80,7 +80,7 @@ const getPortfolio = async (req: Request, res: Response) => {
                 (value) => value.symbol === position.symbol,
             );
             if (positionLiveData) {
-				if (position.quantity * positionLiveData.regularMarketPrice >= 0.10) {
+				if (positionLiveData.regularMarketPrice === 0 || position.quantity * positionLiveData.regularMarketPrice >= 0.10) {
 					listOfPositions.push({
 						...position.toObject(),
 						...positionLiveData,

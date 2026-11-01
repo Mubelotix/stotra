@@ -132,6 +132,7 @@ function Performance({ data }: { data: PublicStatistics }) {
 	const totalReturn = data.returns.capital > 0 ? (data.returns.value / data.returns.capital - 1) * 100 : null;
 	const comparisons = [
 		{ name: "The students", symbol: "Actual portfolios, including cash & fees", value: data.investingUsers ? data.returns.value : null, returnPercent: totalReturn, updatedAt: null, priceDate: null },
+		{ name: "Cash", symbol: "Initial cash × investing users · no interest", value: data.returns.capital, returnPercent: 0, updatedAt: null, priceDate: null },
 		...data.benchmarks.map(benchmark => ({ ...benchmark, name: benchmark.symbol === "BTC-USD" ? "What if everyone bought Bitcoin?" : "What if everyone bought S&P 500?", symbol: benchmark.symbol === "BTC-USD" ? "BTC-USD · buy & hold" : "S&P 500 index · buy & hold" })),
 	];
 	return <Panel>
@@ -142,7 +143,7 @@ function Performance({ data }: { data: PublicStatistics }) {
 			<Box><Text color="gray.500" fontSize="sm">Average investor return</Text><Text fontSize="3xl" fontWeight="bold">{percent(data.returns.average)}</Text><Text color="gray.500" fontSize="xs">Each investing account has equal weight.</Text></Box>
 		</SimpleGrid>
 		<Heading size="sm" mb={4}>The buy-and-hold alternative</Heading>
-		<SimpleGrid columns={{ base: 1, lg: 3 }} spacing={4}>{comparisons.map((item, index) => <Box key={item.name} p={5} borderWidth="1px" borderRadius="lg" borderTopWidth="3px" borderTopColor={colors[index]}>
+		<SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4}>{comparisons.map((item, index) => <Box key={item.name} p={5} borderWidth="1px" borderRadius="lg" borderTopWidth="3px" borderTopColor={colors[index]}>
 			<Text fontWeight="semibold" minH={{ lg: "48px" }}>{item.name}</Text><Text color="gray.500" fontSize="xs" mt={1}>{item.symbol}</Text>
 			<Text fontSize="2xl" fontWeight="bold" mt={4}>{item.value === null ? "Unavailable" : money(item.value)}</Text>
 			{item.returnPercent !== null && <Text fontWeight="semibold" color={item.returnPercent >= 0 ? "green.500" : "red.500"}>{percent(item.returnPercent)}</Text>}

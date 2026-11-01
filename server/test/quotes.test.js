@@ -219,6 +219,22 @@ test("leaderboard uses stale prices or zero when the shared refresh budget is ex
 	assert.equal(yahoo.mock.callCount(), 0);
 });
 
+test("public leaderboard returns cached prices and triggers normal background refreshes", async () => {
+	records.set("OLD", stored("OLD", 42, 3600000));
+	mock.method(User, "find", async () => [{
+		username: "investor", cash: 100,
+		positions: [{ symbol: "OLD", quantity: 2 }, { symbol: "UNKNOWN", quantity: 5 }],
+	}]);
+	const leaderboard = require("../dist/src/controller/leaderboard.controller").default;
+	let body;
+	const res = { status(code) { assert.equal(code, 200); return this; }, send(value) { body = value; } };
+	await leaderboard.getLeaderboard({}, res);
+	assert.deepEqual(body, { users: [{ username: "investor", value: 184 }] });
+	await new Promise(setImmediate);
+	assert.equal(reservations.mock.callCount(), 2);
+	assert.equal(yahoo.mock.callCount(), 2);
+});
+
 test("fresh leaderboard quotes do not consume refresh slots", async () => {
 	records.set("AAPL", stored("AAPL", 130));
 	assert.equal((await getCachedStockPrices(["AAPL", "AAPL"])).get("AAPL"), 130);

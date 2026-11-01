@@ -27,39 +27,38 @@ router.get("/api/logout", (req, res) => {
 	res.redirect(logoutUrl);
 });
 
+// The leaderboard is public; all other data routes require authentication.
+router.get("/api/user/leaderboard", leaderboardController.getLeaderboard);
+
+// Other data routes require the identity supplied by the trusted authentication proxy.
+router.use("/api", authProxy.verifyToken);
+
 // User data routes
-router.get("/api/user/ledger", [authProxy.verifyToken], userController.getLedger);
+router.get("/api/user/ledger", userController.getLedger);
 router.get(
 	"/api/user/holdings",
-	[authProxy.verifyToken],
 	userController.getHoldings,
 );
 router.get(
 	"/api/user/username",
-	[authProxy.verifyToken],
 	userController.getUsername,
 );
 router.get(
 	"/api/user/portfolio",
-	[authProxy.verifyToken],
 	userController.getPortfolio,
 );
-router.get("/api/user/leaderboard", leaderboardController.getLeaderboard);
 
 // User watchlist routes
 router.get(
 	"/api/user/watchlist",
-	[authProxy.verifyToken],
 	userController.getWatchlist,
 );
 router.post(
 	"/api/user/watchlist/add/:symbol",
-	[authProxy.verifyToken],
 	userController.addToWatchlist,
 );
 router.post(
 	"/api/user/watchlist/remove/:symbol",
-	[authProxy.verifyToken],
 	userController.removeFromWatchlist,
 );
 
@@ -71,13 +70,11 @@ router.get("/api/config/trade-fee", getTradeFee);
 
 router.post(
 	"/api/stocks/:symbol/buy",
-	[authProxy.verifyToken],
 	stocksController.buyStock,
 );
 
 router.post(
 	"/api/stocks/:symbol/sell",
-	[authProxy.verifyToken],
 	stocksController.sellStock,
 );
 

@@ -13,10 +13,17 @@ export const yahooFinance = new YahooFinance({
 });
 
 const quoteTTL = 60 * 1000;
-const pendingQuotes = new Map<string, Promise<CachedQuote | null>>();
+const pendingQuotes = new Map<string, {
+	forTrade: boolean;
+	promise: Promise<CachedQuote | null>;
+}>();
 
 function lastQuoteActivity(quote?: CachedQuote | null): number {
 	return Math.max(quote?.attemptedAt?.getTime() ?? 0, quote?.updatedAt?.getTime() ?? 0);
+}
+
+function isFreshQuote(quote: CachedQuote | null): boolean {
+	return !!quote?.updatedAt && Date.now() - quote.updatedAt.getTime() < quoteTTL && (quote.data?.regularMarketPrice ?? 0) > 0;
 }
 
 // Rankings return cached values and reuse the normal refresh path in the background.
@@ -47,12 +54,12 @@ export function unknownStockData(symbol: string): StockData {
 	};
 }
 
-async function loadQuote(symbol: string): Promise<CachedQuote | null> {
+async function loadQuote(symbol: string, forTrade: boolean): Promise<CachedQuote | null> {
 	const cached = await Quote.findById(symbol).lean();
 	if (Date.now() - lastQuoteActivity(cached) < quoteTTL) {
 		return cached;
 	}
-	if (!await reserveQuoteRefresh()) return cached;
+	if (!await reserveQuoteRefresh(forTrade)) return cached;
 
 	// Persist the attempt before contacting Yahoo, so failures/restarts cannot retry freely.
 	await Quote.updateOne({ _id: symbol }, { $set: { attemptedAt: new Date() } }, { upsert: true });
@@ -80,14 +87,26 @@ async function loadQuote(symbol: string): Promise<CachedQuote | null> {
 	}
 }
 
-export async function fetchStockData(symbol: string, requireFresh = false): Promise<StockData> {
+function getPendingQuote(symbol: string, forTrade: boolean) {
 	let pending = pendingQuotes.get(symbol);
 	if (!pending) {
-		pending = loadQuote(symbol).finally(() => pendingQuotes.delete(symbol));
+		pending = {
+			forTrade,
+			promise: loadQuote(symbol, forTrade).finally(() => pendingQuotes.delete(symbol)),
+		};
 		pendingQuotes.set(symbol, pending);
 	}
-	const quote = await pending;
-	if (requireFresh && (!quote?.updatedAt || Date.now() - quote.updatedAt.getTime() >= quoteTTL || (quote.data?.regularMarketPrice ?? 0) <= 0)) {
+	return pending;
+}
+
+export async function fetchStockData(symbol: string, requireFresh = false): Promise<StockData> {
+	const pending = getPendingQuote(symbol, requireFresh);
+	let quote = await pending.promise;
+	// A trade may have joined a background refresh that was refused at the normal cap.
+	if (requireFresh && !pending.forTrade && !isFreshQuote(quote)) {
+		quote = await getPendingQuote(symbol, true).promise;
+	}
+	if (requireFresh && !isFreshQuote(quote)) {
 		throw new Error("A fresh price is unavailable. Please try trading again later.");
 	}
 	return quote?.data ?? unknownStockData(symbol);

@@ -5,8 +5,9 @@ const RefreshBudget = model("QuoteRefreshBudget", new Schema({
 	attempts: [Date],
 }));
 
-// One shared, persistent rolling-hour budget. Failed requests also consume a slot.
-export async function reserveQuoteRefresh(): Promise<boolean> {
+// One shared rolling-hour budget: 100 normally, up to 200 total for trades only.
+// Failed requests also consume a slot, including across server restarts.
+export async function reserveQuoteRefresh(forTrade = false): Promise<boolean> {
 	const now = new Date();
 	const recentAttempts = {
 		$filter: {
@@ -28,7 +29,7 @@ export async function reserveQuoteRefresh(): Promise<boolean> {
 	}
 
 	const reservation = await RefreshBudget.findOneAndUpdate(
-		{ _id: "yahoo-quotes", $expr: { $lt: [{ $size: recentAttempts }, 100] } },
+		{ _id: "yahoo-quotes", $expr: { $lt: [{ $size: recentAttempts }, forTrade ? 200 : 100] } },
 		[{ $set: { attempts: { $concatArrays: [recentAttempts, [now]] } } }],
 	);
 	return reservation !== null;

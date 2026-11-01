@@ -21,6 +21,15 @@ test("MongoDB persists quotes and enforces the shared budget for concurrent requ
 		await mongoose.disconnect();
 		await mongoose.connect(process.env.STOTRA_TEST_MONGODB_URI, { dbName: "stotra_quote_test_" + process.pid });
 		assert.equal(await reserveQuoteRefresh(), false);
+		// Trades may use the second half of the same budget, never 200 additional slots.
+		const tradeOutcomes = await Promise.all(Array.from({ length: 150 }, () => reserveQuoteRefresh(true)));
+		assert.equal(tradeOutcomes.filter(Boolean).length, 100);
+		assert.equal((await budget.findById("yahoo-quotes")).attempts.length, 200);
+		assert.equal(await reserveQuoteRefresh(true), false);
+		await mongoose.disconnect();
+		await mongoose.connect(process.env.STOTRA_TEST_MONGODB_URI, { dbName: "stotra_quote_test_" + process.pid });
+		assert.equal(await reserveQuoteRefresh(), false);
+		assert.equal(await reserveQuoteRefresh(true), false);
 		assert.equal((await Quote.findById("AAPL")).data.regularMarketPrice, 123.45);
 
 		// Expired attempts free slots, but recent attempts remain charged.
@@ -29,6 +38,12 @@ test("MongoDB persists quotes and enforces the shared budget for concurrent requ
 		} });
 		assert.equal(await reserveQuoteRefresh(), true);
 		assert.equal(await reserveQuoteRefresh(), false);
+		await budget.updateOne({ _id: "yahoo-quotes" }, { $set: {
+			attempts: [new Date(Date.now() - 3600001), ...Array.from({ length: 199 }, () => new Date())],
+		} });
+		assert.equal(await reserveQuoteRefresh(), false);
+		assert.equal(await reserveQuoteRefresh(true), true);
+		assert.equal(await reserveQuoteRefresh(true), false);
 
 		// Exercise the actual leaderboard -> cache -> refresh -> budget path without Yahoo.
 		await budget.updateOne({ _id: "yahoo-quotes" }, { $set: { attempts: [] } });
@@ -50,6 +65,12 @@ test("MongoDB persists quotes and enforces the shared budget for concurrent requ
 		assert.equal(yahoo.mock.callCount(), 100);
 		assert.equal(await Quote.countDocuments({ data: { $exists: true }, _id: { $in: symbols } }), 100);
 		assert.equal(await reserveQuoteRefresh(), false);
+		const trades = await Promise.allSettled(symbols.slice(100, 250).map(symbol => fetchStockData(symbol, true)));
+		assert.equal(trades.filter(result => result.status === "fulfilled").length, 100);
+		assert.equal(trades.filter(result => result.status === "rejected").length, 50);
+		assert.equal(yahoo.mock.callCount(), 200);
+		assert.equal((await fetchStockData("S599")).regularMarketPrice, 0);
+		assert.equal(await reserveQuoteRefresh(true), false);
 	} finally {
 		await mongoose.connection.dropDatabase();
 		await mongoose.disconnect();

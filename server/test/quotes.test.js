@@ -125,6 +125,41 @@ test("trades cannot use unknown or stale fallback prices", async () => {
 	}
 });
 
+test("only trades can request the doubled budget, and fresh prices still reuse the cache", async () => {
+	reservations.mock.mockImplementation(async forTrade => forTrade);
+	records.set("OLD", stored("OLD", 42, 60000));
+	assert.equal((await fetchStockData("OLD")).regularMarketPrice, 42);
+	assert.equal((await fetchStockData("OLD", true)).regularMarketPrice, 123.45);
+	assert.deepEqual(reservations.mock.calls.map(call => call.arguments[0]), [false, true]);
+	assert.equal(yahoo.mock.callCount(), 1);
+	await fetchStockData("OLD", true);
+	assert.equal(reservations.mock.callCount(), 2);
+});
+
+test("concurrent trades can use extra budget after joining a refused background refresh", async () => {
+	let refuseBackground;
+	const refused = new Promise(resolve => { refuseBackground = resolve; });
+	reservations.mock.mockImplementation(async forTrade => forTrade ? true : refused);
+	const background = fetchStockData("AAPL");
+	const trades = Array.from({ length: 20 }, () => fetchStockData("AAPL", true));
+	refuseBackground(false);
+	assert.equal((await background).regularMarketPrice, 0);
+	assert.ok((await Promise.all(trades)).every(quote => quote.regularMarketPrice === 123.45));
+	assert.deepEqual(reservations.mock.calls.map(call => call.arguments[0]), [false, true]);
+	assert.equal(yahoo.mock.callCount(), 1);
+});
+
+test("failed trade refreshes preserve old data but cannot authorize a stale-price trade", async () => {
+	reservations.mock.mockImplementation(async forTrade => forTrade);
+	records.set("OLD", stored("OLD", 42, 3600000));
+	yahoo.mock.mockImplementation(async () => { throw new Error("Yahoo unavailable"); });
+	await assert.rejects(fetchStockData("OLD", true), /fresh price/);
+	await assert.rejects(fetchStockData("OLD", true), /fresh price/);
+	assert.equal(records.get("OLD").data.regularMarketPrice, 42);
+	assert.equal(reservations.mock.callCount(), 1);
+	assert.equal(yahoo.mock.callCount(), 1);
+});
+
 test("600-ticker leaderboard responds without waiting for at most 10 background refreshes", async () => {
 	const positions = Array.from({ length: 600 }, (_, index) => ({ symbol: "S" + index, quantity: 2 }));
 	mock.method(User, "find", async () => [

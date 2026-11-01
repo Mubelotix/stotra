@@ -67,13 +67,23 @@ export function calculateBenchmark(investors: Investor[], history: BenchmarkPric
 export function calculateStatistics(users: StatisticsUser[], quotes: StatisticsQuote[], histories: BenchmarkPrices[], now = Date.now()) {
 	const bySymbol = new Map(quotes.map(quote => [quote._id, quote]));
 	const assetClasses = [
-		{ key: "stocks", label: "Stocks & funds", value: 0, holders: 0, bought30: 0, sold30: 0, fees30: 0 },
+		{ key: "stocks", label: "Stocks", value: 0, holders: 0, bought30: 0, sold30: 0, fees30: 0 },
+		{ key: "funds", label: "ETFs & funds", value: 0, holders: 0, bought30: 0, sold30: 0, fees30: 0 },
 		{ key: "crypto", label: "Crypto", value: 0, holders: 0, bought30: 0, sold30: 0, fees30: 0 },
-		{ key: "other", label: "Other / unclassified", value: 0, holders: 0, bought30: 0, sold30: 0, fees30: 0 },
+		{ key: "indices", label: "Indices", value: 0, holders: 0, bought30: 0, sold30: 0, fees30: 0 },
+		{ key: "futures", label: "Futures", value: 0, holders: 0, bought30: 0, sold30: 0, fees30: 0 },
+		{ key: "currencies", label: "Currencies / Forex", value: 0, holders: 0, bought30: 0, sold30: 0, fees30: 0 },
+		{ key: "options", label: "Options", value: 0, holders: 0, bought30: 0, sold30: 0, fees30: 0 },
+		{ key: "other", label: "Other / unknown", value: 0, holders: 0, bought30: 0, sold30: 0, fees30: 0 },
 	];
+	const typeClasses = new Map([
+		["EQUITY", "stocks"], ["ETF", "funds"], ["MUTUALFUND", "funds"], ["CRYPTOCURRENCY", "crypto"],
+		["INDEX", "indices"], ["FUTURE", "futures"], ["CURRENCY", "currencies"], ["OPTION", "options"],
+	]);
 	const assetClass = (symbol: string) => {
-		const type = bySymbol.get(symbol)?.data?.quoteType;
-		return assetClasses[type === "CRYPTOCURRENCY" ? 1 : type && ["EQUITY", "ETF", "MUTUALFUND"].includes(type) ? 0 : 2];
+		const type = bySymbol.get(symbol)?.data?.quoteType?.toUpperCase() ?? "";
+		const key = typeClasses.get(type) ?? "other";
+		return assetClasses.find(category => category.key === key)!;
 	};
 	const holdings = new Map<string, { symbol: string; name: string; holders: number; value: number }>();
 	const trending = new Map<string, { symbol: string; name: string; bought30: number; sold30: number; bought365: number; sold365: number }>();

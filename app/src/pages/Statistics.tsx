@@ -152,11 +152,11 @@ function Performance({ data }: { data: PublicStatistics }) {
 	</Panel>;
 }
 
-function StocksVsCrypto({ data }: { data: PublicStatistics }) {
+function AssetClasses({ data }: { data: PublicStatistics }) {
 	const rows = data.assetClasses.filter(row => row.key !== "other" || row.holders || row.bought30 || row.sold30);
 	return <Panel>
-		<Heading size="md" mb={2}>Stocks vs crypto</Heading>
-		<Text fontSize="sm" color="gray.500" mb={5}>Traditional markets or digital assets? Compare where students put their money.</Text>
+		<Heading size="md" mb={2}>Asset classes</Heading>
+		<Text fontSize="sm" color="gray.500" mb={5}>Stocks, funds, crypto and more. Compare where students put their money.</Text>
 		{data.stockValue > 0 && <Flex h={5} borderRadius="full" overflow="hidden" mb={4} role="img" aria-label={rows.map(row => `${row.label}: ${(row.value / data.stockValue * 100).toFixed(1)}% of invested value`).join("; ")}>
 			{rows.map((row, index) => <Box key={row.key} w={`${row.value / data.stockValue * 100}%`} bg={colors[index]} title={`${row.label}: ${money(row.value)}`} />)}
 		</Flex>}
@@ -165,7 +165,7 @@ function StocksVsCrypto({ data }: { data: PublicStatistics }) {
 			<Thead><Tr><Th>Asset class</Th><Th isNumeric>Invested value</Th><Th isNumeric>Holders</Th><Th isNumeric>Bought · 30d</Th><Th isNumeric>Sold · 30d</Th><Th isNumeric>Fees · 30d</Th></Tr></Thead>
 			<Tbody>{rows.map(row => <Tr key={row.key}><Td py={4} fontWeight="semibold">{row.label}</Td><Td isNumeric>{money(row.value)}</Td><Td isNumeric>{count(row.holders)}</Td><Td isNumeric>{money(row.bought30)}</Td><Td isNumeric>{money(row.sold30)}</Td><Td isNumeric>{money(row.fees30)}</Td></Tr>)}</Tbody>
 		</Table></TableContainer>
-		<Text color="gray.500" fontSize="xs" mt={4}>Stocks & funds includes equities, ETFs and mutual funds. Classification uses cached Yahoo asset types; missing or other types remain unclassified. Holders are unique within each class; someone can hold both. Cash is excluded.</Text>
+		<Text color="gray.500" fontSize="xs" mt={4}>Stocks includes equities; ETFs & funds includes ETFs and mutual funds. Indices, futures, currencies and options are classified separately using cached Yahoo asset types. Missing or unrecognized types appear under Other / unknown. Holders are unique within each class; someone can hold multiple classes. Cash is excluded.</Text>
 	</Panel>;
 }
 
@@ -199,7 +199,7 @@ export default function Statistics() {
 				<Metric label="Fees paid, all time" value={money(data.feesAllTime)} detail="Virtual dollars spent on trading" />
 			</SimpleGrid>
 			<AllocationCharts data={data} />
-			<StocksVsCrypto data={data} />
+			<AssetClasses data={data} />
 			<Holdings data={data} />
 			<Trending rows={data.trending} />
 			<Performance data={data} />

@@ -34,7 +34,7 @@ test("statistics count unique holders, current value, rolling dollar volume, use
 	assert.equal(result.assetClasses[0].bought30, 100);
 	assert.equal(result.assetClasses[0].sold30, 22);
 	assert.equal(result.assetClasses[0].fees30, 3);
-	assert.equal(result.assetClasses[1].value, 120);
+	assert.equal(result.assetClasses.find(row => row.key === "crypto").value, 120);
 });
 
 test("returns use fixed starting cash, exclude idle accounts, and retain investors who sold everything", () => {
@@ -83,12 +83,40 @@ test("unknown prices count as zero, unknown types are not guessed, and mixed hol
 	assert.deepEqual(result.missingPrices, ["MISSING"]);
 	assert.equal(result.stockValue, 150);
 	assert.equal(result.assetClasses[0].holders, 1);
-	assert.equal(result.assetClasses[0].value, 50);
-	assert.equal(result.assetClasses[1].holders, 0);
-	assert.equal(result.assetClasses[2].holders, 1);
-	assert.equal(result.assetClasses[2].value, 100);
-	assert.equal(result.assetClasses[2].bought30, 30);
+	assert.equal(result.assetClasses[0].value, 10);
+	assert.equal(result.assetClasses.find(row => row.key === "funds").value, 40);
+	assert.equal(result.assetClasses.find(row => row.key === "crypto").holders, 0);
+	const other = result.assetClasses.find(row => row.key === "other");
+	assert.equal(other.holders, 1);
+	assert.equal(other.value, 100);
+	assert.equal(other.bought30, 30);
 	assert.equal(result.assetClasses.reduce((sum, row) => sum + row.value, 0), result.stockValue);
+});
+
+test("asset classes classify every supported type and aggregate holdings, trades and fees independently", () => {
+	const types = [
+		["EQUITY", "stocks"], ["ETF", "funds"], ["MUTUALFUND", "funds"], ["CRYPTOCURRENCY", "crypto"],
+		["INDEX", "indices"], ["FUTURE", "futures"], ["CURRENCY", "currencies"], ["OPTION", "options"],
+		["Option", "options"], ["UNRECOGNIZED", "other"], ["", "other"],
+	];
+	const quotes = types.map(([type], i) => quote(String(i), 10, type));
+	const user = {
+		cash: 0,
+		positions: types.flatMap((_, i) => [{ symbol: String(i), quantity: 1 }, { symbol: String(i), quantity: 2 }]),
+		ledger: types.flatMap((_, i) => [trade("buy", String(i), 10, 3, 1, 1), trade("sell", String(i), 10, 1, 1, 2)]),
+	};
+	const result = calculateStatistics([user], quotes, [], now);
+	assert.equal(result.assetClasses.length, 8);
+	for (const row of result.assetClasses) {
+		const assets = types.filter(([, key]) => key === row.key).length;
+		assert.equal(row.value, assets * 30);
+		assert.equal(row.holders, 1);
+		assert.equal(row.bought30, assets * 30);
+		assert.equal(row.sold30, assets * 10);
+		assert.equal(row.fees30, assets * 3);
+	}
+	assert.equal(result.assetClasses.reduce((sum, row) => sum + row.value, 0), result.stockValue);
+	assert.equal(result.assetClasses.reduce((sum, row) => sum + row.fees30, 0), result.fees30);
 });
 
 test("benchmark invests the same starting cash on each investor's first-trade date or the next session", () => {

@@ -147,8 +147,6 @@ function Performance({ data }: { data: PublicStatistics }) {
 			<Text fontWeight="semibold" minH={{ lg: "48px" }}>{item.name}</Text><Text color="gray.500" fontSize="xs" mt={1}>{item.symbol}</Text>
 			<Text fontSize="2xl" fontWeight="bold" mt={4}>{item.value === null ? "Unavailable" : money(item.value)}</Text>
 			{item.returnPercent !== null && <Text fontWeight="semibold" color={item.returnPercent >= 0 ? "green.500" : "red.500"}>{percent(item.returnPercent)}</Text>}
-			{item.priceDate && <Text color="gray.500" fontSize="xs" mt={3}>Price date: {new Date(item.priceDate).toLocaleDateString()}</Text>}
-			{item.updatedAt && <Text color="gray.500" fontSize="xs">Fetched: {date(item.updatedAt)}</Text>}
 		</Box>)}</SimpleGrid>
 		<Text color="gray.500" fontSize="xs" mt={5} lineHeight="tall">Same investors, same fixed starting capital ({money(data.returns.capital)} total). Each hypothetical investor buys once at the daily close on their first trade’s UTC date, or the next available session, and holds until the latest available close. Bitcoin and the S&P 500 price index exclude fees, dividends and interest. These are approximate scenarios, not annualized or risk-adjusted returns. A benchmark is unavailable unless every investor has a matching entry price.</Text>
 	</Panel>;

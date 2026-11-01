@@ -26,20 +26,21 @@ function isFreshQuote(quote: CachedQuote | null): boolean {
 	return !!quote?.updatedAt && Date.now() - quote.updatedAt.getTime() < quoteTTL && (quote.data?.regularMarketPrice ?? 0) > 0;
 }
 
-// Rankings return cached values and reuse the normal refresh path in the background.
+// Public rankings only read MongoDB; page traffic must never schedule Yahoo requests.
 export async function getCachedStockPrices(symbols: string[]): Promise<Map<string, number>> {
 	const quotes = await Quote.find({ _id: { $in: symbols } }).lean();
-	const bySymbol = new Map(quotes.map(quote => [quote._id, quote]));
-	const prices = new Map(symbols.map(symbol => [symbol, bySymbol.get(symbol)?.data?.regularMarketPrice ?? 0]));
-	const staleSymbols = [...new Set(symbols)]
-		.filter(symbol => Date.now() - lastQuoteActivity(bySymbol.get(symbol)) >= quoteTTL)
-		.sort((a, b) => lastQuoteActivity(bySymbol.get(a)) - lastQuoteActivity(bySymbol.get(b)));
+	const prices = new Map(quotes.map(quote => [quote._id, quote.data?.regularMarketPrice ?? 0]));
+	return new Map(symbols.map(symbol => [symbol, prices.get(symbol) ?? 0]));
+}
 
-	// Keep each page load small. Persisted attempt times rotate failures to the back too.
-	for (const symbol of staleSymbols.slice(0, 10)) {
-		void fetchStockData(symbol).catch(error => console.error("Error refreshing " + symbol + ":", error));
-	}
-	return prices;
+// Called only by the hourly worker. Persisted activity rotates failures behind unseen symbols.
+export async function refreshStockPrices(symbols: string[]): Promise<void> {
+	const quotes = await Quote.find({ _id: { $in: symbols } }).lean();
+	const activity = new Map(quotes.map(quote => [quote._id, lastQuoteActivity(quote)]));
+	const staleSymbols = [...new Set(symbols)]
+		.filter(symbol => Date.now() - (activity.get(symbol) ?? 0) >= 3600000)
+		.sort((a, b) => (activity.get(a) ?? 0) - (activity.get(b) ?? 0));
+	for (const symbol of staleSymbols.slice(0, 100)) await fetchStockData(symbol);
 }
 
 export function unknownStockData(symbol: string): StockData {

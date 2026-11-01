@@ -5,7 +5,7 @@ const { reserveQuoteRefresh } = require("../dist/src/utils/quoteRefreshLimit");
 const Quote = require("../dist/src/models/quote.model").default;
 
 // Optional integration test: use a dedicated test database, never a production URI.
-test("MongoDB persists quotes and enforces the shared budget for concurrent requests and leaderboard warming", {
+test("MongoDB persists quotes and enforces the shared budget for concurrent requests and background warming", {
 	skip: !process.env.STOTRA_TEST_MONGODB_URI,
 }, async t => {
 	await mongoose.connect(process.env.STOTRA_TEST_MONGODB_URI, {
@@ -45,9 +45,9 @@ test("MongoDB persists quotes and enforces the shared budget for concurrent requ
 		assert.equal(await reserveQuoteRefresh(true), true);
 		assert.equal(await reserveQuoteRefresh(true), false);
 
-		// Exercise the actual leaderboard -> cache -> refresh -> budget path without Yahoo.
+		// Background warming consumes the normal budget; leaderboard reads consume nothing.
 		await budget.updateOne({ _id: "yahoo-quotes" }, { $set: { attempts: [] } });
-		const { yahooFinance, fetchStockData } = require("../dist/src/utils/requests");
+		const { yahooFinance, fetchStockData, refreshStockPrices } = require("../dist/src/utils/requests");
 		const { getLeaderboardTopN } = require("../dist/src/controller/leaderboard.controller");
 		const yahoo = t.mock.method(yahooFinance, "quoteCombine", async symbol => ({
 			symbol, regularMarketPrice: 123.45,
@@ -57,11 +57,10 @@ test("MongoDB persists quotes and enforces the shared budget for concurrent requ
 			username: "investor", cash: 100,
 			positions: symbols.map(symbol => ({ symbol, quantity: 2 })),
 		});
-		for (let page = 0; page < 11; page++) {
-			const values = await getLeaderboardTopN(-1);
-			assert.ok(Math.abs(values[0].value - (100 + Math.min(page, 10) * 10 * 2 * 123.45)) < 0.000001);
-			await Promise.all(symbols.slice(page * 10, page * 10 + 10).map(symbol => fetchStockData(symbol)));
-		}
+		assert.equal((await getLeaderboardTopN(-1))[0].value, 100);
+		assert.equal(yahoo.mock.callCount(), 0);
+		await refreshStockPrices(symbols);
+		assert.ok(Math.abs((await getLeaderboardTopN(-1))[0].value - (100 + 100 * 2 * 123.45)) < 0.000001);
 		assert.equal(yahoo.mock.callCount(), 100);
 		assert.equal(await Quote.countDocuments({ data: { $exists: true }, _id: { $in: symbols } }), 100);
 		assert.equal(await reserveQuoteRefresh(), false);

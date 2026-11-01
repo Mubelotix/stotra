@@ -5,7 +5,7 @@ const User = require("../dist/src/models/user.model").default;
 const limiter = require("../dist/src/utils/quoteRefreshLimit");
 const stocks = require("../dist/src/controller/stocks.controller").default;
 const { getLeaderboardTopN } = require("../dist/src/controller/leaderboard.controller");
-const { fetchStockData, getCachedStockPrices, yahooFinance } = require("../dist/src/utils/requests");
+const { fetchStockData, getCachedStockPrices, refreshStockPrices, yahooFinance } = require("../dist/src/utils/requests");
 
 const now = Date.now();
 let records;
@@ -160,53 +160,49 @@ test("failed trade refreshes preserve old data but cannot authorize a stale-pric
 	assert.equal(yahoo.mock.callCount(), 1);
 });
 
-test("600-ticker leaderboard responds without waiting for at most 10 background refreshes", async () => {
+test("600-ticker leaderboard only reads cached prices, even on repeated page loads", async () => {
 	const positions = Array.from({ length: 600 }, (_, index) => ({ symbol: "S" + index, quantity: 2 }));
 	mock.method(User, "find", async () => [
 		{ username: "investor", cash: 100, positions },
 		{ username: "cash", cash: 150, positions: [] },
 	]);
 	records.set("S0", stored("S0", 50, 86400000));
-	let release;
-	const gate = new Promise(resolve => { release = resolve; });
-	yahoo.mock.mockImplementation(async symbol => {
-		await gate;
-		return { symbol, regularMarketPrice: 123.45 };
-	});
-	assert.deepEqual(await getLeaderboardTopN(-1), [
-		{ username: "investor", value: 200 }, { username: "cash", value: 150 },
-	]);
-	release();
-	await Promise.all(Array.from({ length: 10 }, (_, index) => fetchStockData("S" + (index + 1))));
-	assert.equal(yahoo.mock.callCount(), 10);
-	assert.equal(reservations.mock.callCount(), 10);
-	assert.equal(records.get("S1").data.regularMarketPrice, 123.45);
+	for (let page = 0; page < 20; page++) {
+		assert.deepEqual(await getLeaderboardTopN(-1), [
+			{ username: "investor", value: 200 }, { username: "cash", value: 150 },
+		]);
+	}
+	assert.equal(yahoo.mock.callCount(), 0);
+	assert.equal(reservations.mock.callCount(), 0);
 });
 
-test("leaderboard refreshes rotate across missing prices, failures, and oldest attempts", async () => {
-	const symbols = Array.from({ length: 25 }, (_, index) => "S" + index);
-	const refreshPage = async selected => {
-		const prices = await getCachedStockPrices(symbols);
-		// Join only the refreshes started by this page, without scheduling extra work.
-		await Promise.all(selected.map(symbol => fetchStockData(symbol)));
-		return prices;
-	};
-	assert.equal((await refreshPage(symbols.slice(0, 10))).get("S0"), 0);
-	assert.equal((await refreshPage(symbols.slice(10, 20))).get("S0"), 123.45);
-	assert.equal(yahoo.mock.callCount(), 20);
-	assert.equal(new Set(yahoo.mock.calls.map(call => call.arguments[0])).size, 20);
+test("background warming is bounded and prioritizes unseen symbols before old prices and failed attempts", async () => {
+	const symbols = Array.from({ length: 150 }, (_, index) => "S" + index);
+	records.set("OLD", stored("OLD", 42, 86400000));
+	records.set("FAILED", { _id: "FAILED", attemptedAt: new Date(now - 7200000) });
+	await refreshStockPrices(["OLD", "FAILED", ...symbols]);
+	assert.equal(yahoo.mock.callCount(), 100);
+	assert.deepEqual(yahoo.mock.calls.map(call => call.arguments[0]), symbols.slice(0, 100));
+	await refreshStockPrices(["OLD", "FAILED", ...symbols]);
+	assert.deepEqual(yahoo.mock.calls.slice(100).map(call => call.arguments[0]), [...symbols.slice(100), "OLD", "FAILED"]);
+	assert.ok(reservations.mock.calls.every(call => call.arguments[0] === false));
+	await refreshStockPrices(symbols);
+	assert.equal(yahoo.mock.callCount(), 152);
+});
 
-	// A failed symbol must not block the remaining unseen symbols on the next page.
-	mock.timers.tick(60000);
-	yahoo.mock.mockImplementation(async () => { throw new Error("Delisted"); });
-	await refreshPage([...symbols.slice(20), ...symbols.slice(0, 5)]);
-	const attempted = yahoo.mock.calls.map(call => call.arguments[0]);
-	assert.ok(symbols.every(symbol => attempted.includes(symbol)));
-	assert.equal(records.get("S20").data, undefined);
-	assert.ok(records.get("S20").attemptedAt);
-	await refreshPage(symbols.slice(5, 15));
-	assert.equal(yahoo.mock.callCount(), 40);
-	assert.equal(yahoo.mock.calls.filter(call => call.arguments[0] === "S20").length, 1);
+test("failed background quotes do not block warming and are retried only after an hour", async () => {
+	yahoo.mock.mockImplementation(async symbol => {
+		if (symbol === "BAD") throw new Error("Delisted");
+		return { symbol, regularMarketPrice: 123.45 };
+	});
+	await refreshStockPrices(["BAD", "GOOD", "GOOD"]);
+	assert.ok(records.get("BAD").attemptedAt);
+	assert.equal(records.get("GOOD").data.regularMarketPrice, 123.45);
+	await refreshStockPrices(["BAD", "GOOD"]);
+	assert.equal(yahoo.mock.callCount(), 2);
+	mock.timers.tick(3600000);
+	await refreshStockPrices(["BAD", "GOOD"]);
+	assert.equal(yahoo.mock.callCount(), 4);
 });
 
 test("leaderboard uses stale prices or zero when the shared refresh budget is exhausted", async () => {
@@ -215,11 +211,11 @@ test("leaderboard uses stale prices or zero when the shared refresh budget is ex
 	const prices = await getCachedStockPrices(["OLD", "UNKNOWN"]);
 	assert.equal(prices.get("OLD"), 42);
 	assert.equal(prices.get("UNKNOWN"), 0);
-	await Promise.all([fetchStockData("OLD"), fetchStockData("UNKNOWN")]);
+	await refreshStockPrices(["OLD", "UNKNOWN"]);
 	assert.equal(yahoo.mock.callCount(), 0);
 });
 
-test("public leaderboard returns cached prices and triggers normal background refreshes", async () => {
+test("public leaderboard returns cached prices without triggering refreshes", async () => {
 	records.set("OLD", stored("OLD", 42, 3600000));
 	mock.method(User, "find", async () => [{
 		username: "investor", cash: 100,
@@ -231,8 +227,8 @@ test("public leaderboard returns cached prices and triggers normal background re
 	await leaderboard.getLeaderboard({}, res);
 	assert.deepEqual(body, { users: [{ username: "investor", value: 184 }] });
 	await new Promise(setImmediate);
-	assert.equal(reservations.mock.callCount(), 2);
-	assert.equal(yahoo.mock.callCount(), 2);
+	assert.equal(reservations.mock.callCount(), 0);
+	assert.equal(yahoo.mock.callCount(), 0);
 });
 
 test("fresh leaderboard quotes do not consume refresh slots", async () => {
@@ -242,12 +238,11 @@ test("fresh leaderboard quotes do not consume refresh slots", async () => {
 	assert.equal(yahoo.mock.callCount(), 0);
 });
 
-test("background database errors do not fail the cached leaderboard response", async () => {
+test("cache reads never touch the refresh budget", async () => {
 	reservations.mock.mockImplementation(async () => { throw new Error("Budget database unavailable"); });
 	const prices = await getCachedStockPrices(["UNKNOWN"]);
 	assert.equal(prices.get("UNKNOWN"), 0);
 	await new Promise(setImmediate);
 	assert.equal(yahoo.mock.callCount(), 0);
-	const errors = console.error.mock.calls.filter(call => call.arguments[0] === "Error refreshing UNKNOWN:");
-	assert.equal(errors.length, 1);
+	assert.equal(reservations.mock.callCount(), 0);
 });

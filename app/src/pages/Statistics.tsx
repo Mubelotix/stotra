@@ -144,11 +144,11 @@ function Performance({ data }: { data: PublicStatistics }) {
 		<SimpleGrid columns={{ base: 1, lg: 3 }} spacing={4}>{comparisons.map((item, index) => <Box key={item.name} p={5} borderWidth="1px" borderRadius="lg" borderTopWidth="3px" borderTopColor={colors[index]}>
 			<Text fontWeight="semibold" minH={{ lg: "48px" }}>{item.name}</Text><Text color="gray.500" fontSize="xs" mt={1}>{item.symbol}</Text>
 			<Text fontSize="2xl" fontWeight="bold" mt={4}>{item.value === null ? "Unavailable" : money(item.value)}</Text>
-			<Text fontWeight="semibold" color={item.returnPercent === null ? "gray.500" : item.returnPercent >= 0 ? "green.500" : "red.500"}>{percent(item.returnPercent)}</Text>
+			{item.returnPercent !== null && <Text fontWeight="semibold" color={item.returnPercent >= 0 ? "green.500" : "red.500"}>{percent(item.returnPercent)}</Text>}
 			{item.priceDate && <Text color="gray.500" fontSize="xs" mt={3}>Price date: {new Date(item.priceDate).toLocaleDateString()}</Text>}
 			{item.updatedAt && <Text color="gray.500" fontSize="xs">Fetched: {date(item.updatedAt)}</Text>}
 		</Box>)}</SimpleGrid>
-		<Text color="gray.500" fontSize="xs" mt={5} lineHeight="tall">Same investors, same reconstructed starting capital ({money(data.returns.capital)} total). Each hypothetical investor buys once at the daily close on their first trade’s UTC date, or the next available session, and holds until the latest available close. Bitcoin and the S&P 500 price index exclude fees, dividends and interest. These are approximate scenarios, not annualized or risk-adjusted returns. A benchmark is unavailable unless every investor has a matching entry price.</Text>
+		<Text color="gray.500" fontSize="xs" mt={5} lineHeight="tall">Same investors, same fixed starting capital ({money(data.returns.capital)} total). Each hypothetical investor buys once at the daily close on their first trade’s UTC date, or the next available session, and holds until the latest available close. Bitcoin and the S&P 500 price index exclude fees, dividends and interest. These are approximate scenarios, not annualized or risk-adjusted returns. A benchmark is unavailable unless every investor has a matching entry price.</Text>
 	</Panel>;
 }
 
@@ -191,7 +191,7 @@ export default function Statistics() {
 		{data && <>
 			<Flex justify="space-between" gap={2} wrap="wrap" fontSize="xs" color="gray.500"><Text>Snapshot: {date(data.generatedAt)} · recomputed hourly</Text><Text>{count(data.investingUsers)} investors · {count(data.accounts)} accounts</Text></Flex>
 			{Date.now() - new Date(data.generatedAt).getTime() > 2 * 3600000 && <Alert status="warning" borderRadius="lg"><AlertIcon />This snapshot is older than expected. An updated snapshot is not available yet.</Alert>}
-			{data.missingPrices.length > 0 && <Alert status="warning" borderRadius="lg"><AlertIcon /><Text fontSize="sm">Missing prices for {data.missingPrices.join(", ")}. These positions count as $0; valuations and returns are understated.</Text></Alert>}
+			{data.missingPrices.length > 0 && <Alert status="warning" borderRadius="lg"><AlertIcon /><Text fontSize="sm">Prices available for {count(data.holdings.length - data.missingPrices.length)} of {count(data.holdings.length)} held assets. Missing prices count as $0, understating valuations and returns. Prices refresh automatically in the background.</Text></Alert>}
 			<SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={4}>
 				<Metric label="Monthly transactions" value={count(data.transactions30)} detail="Buys + sells · rolling 30 days" />
 				<Metric label="Monthly trading users" value={count(data.tradingUsers30)} detail="Unique traders · rolling 30 days" />
@@ -203,7 +203,7 @@ export default function Statistics() {
 			<Holdings data={data} />
 			<Trending rows={data.trending} />
 			<Performance data={data} />
-			<Box fontSize="xs" color="gray.500" lineHeight="tall"><Text>About the numbers: all amounts are virtual USD. Holdings use the persistent quote cache and may be older than this hourly snapshot.{data.oldestQuoteAt && ` Oldest held-asset quote: ${date(data.oldestQuoteAt)}.`}</Text><Text>Starting capital is reconstructed by reversing recorded buys, sells and fees from current cash. Returns assume a complete ledger and no unrecorded cash adjustments. Fees absent from older transactions are not estimated. Aggregate data only; no individual portfolios are exposed here.</Text></Box>
+			<Box fontSize="xs" color="gray.500" lineHeight="tall"><Text>About the numbers: all amounts are virtual USD. Holdings use the persistent quote cache and may be older than this hourly snapshot.{data.oldestQuoteAt && ` Oldest held-asset quote: ${date(data.oldestQuoteAt)}.`}</Text><Text>Returns use the same fixed starting capital for every investor. Fees absent from older transactions are not estimated. Aggregate data only; no individual portfolios are exposed here.</Text></Box>
 		</>}
 	</Stack>;
 }

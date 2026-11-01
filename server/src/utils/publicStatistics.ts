@@ -3,7 +3,7 @@ import Quote from "../models/quote.model";
 import { BenchmarkHistory, StatisticsCache } from "../models/statistics.model";
 import { BenchmarkPrices, calculateStatistics, getInvestors } from "./statistics";
 import { reserveQuoteRefresh } from "./quoteRefreshLimit";
-import { yahooFinance } from "./requests";
+import { refreshStockPrices, yahooFinance } from "./requests";
 
 const hour = 3600000;
 let pending: Promise<ReturnType<typeof calculateStatistics> | undefined> | undefined;
@@ -37,7 +37,7 @@ async function recompute() {
 	} catch (error: any) {
 		if (error.code !== 11000) throw error;
 	}
-	// Persistent claim prevents page traffic, failures, restarts, or multiple processes
+	// Persistent claim prevents failures, restarts, or multiple processes
 	// from multiplying computation or Yahoo requests within the hour.
 	const claimed = await StatisticsCache.findOneAndUpdate({
 		_id: "public", attemptedAt: { $lte: new Date(Date.now() - hour) },
@@ -47,35 +47,30 @@ async function recompute() {
 	const symbols = [...new Set(users.flatMap(user => [
 		...user.positions.map(position => position.symbol), ...user.ledger.map(trade => trade.symbol),
 	]))];
-	// Stats never initiate per-holding quote refreshes. Reuse the existing persistent cache.
-	const quotes = await Quote.find({ _id: { $in: symbols } }).lean();
-	const investors = getInvestors(users, quotes, Date.now());
+	const investors = getInvestors(users, [], Date.now());
 	const firstTrade = investors.length ? Math.min(...investors.map(investor => investor.firstTrade)) : undefined;
 	const histories = [];
 	for (const symbol of ["BTC-USD", "^GSPC"]) histories.push(await loadBenchmark(symbol, firstTrade));
+	// Benchmarks and held assets share the normal budget; never use the trade reserve.
+	await refreshStockPrices(users.flatMap(user => user.positions.filter(position => position.quantity > 0).map(position => position.symbol)));
+	const quotes = await Quote.find({ _id: { $in: symbols } }).lean();
 	const snapshot = calculateStatistics(users, quotes, histories);
 	await StatisticsCache.updateOne({ _id: "public" }, { $set: { snapshot } });
 	return snapshot;
 }
 
-function refresh() {
+export function refreshPublicStatistics() {
 	if (!pending) pending = recompute().finally(() => { pending = undefined; });
 	return pending;
 }
 
+// Public requests are cache-only, even if the snapshot is stale or still being prepared.
 export async function getPublicStatistics() {
-	const cached = await StatisticsCache.findById("public").lean();
-	if (cached?.snapshot) {
-		if (Date.now() - new Date(cached.snapshot.generatedAt).getTime() >= hour) {
-			void refresh().catch(error => console.error("Error refreshing public statistics:", error));
-		}
-		return cached.snapshot;
-	}
-	return refresh();
+	return (await StatisticsCache.findById("public").lean())?.snapshot;
 }
 
 export function startStatisticsRefresh() {
-	const tick = () => { void getPublicStatistics().catch(error => console.error("Error refreshing public statistics:", error)); };
+	const tick = () => { void refreshPublicStatistics().catch(error => console.error("Error refreshing public statistics:", error)); };
 	tick();
 	// Check the persisted hourly deadline, including after a server restart.
 	const timer = setInterval(tick, 60000);

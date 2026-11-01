@@ -1,3 +1,5 @@
+import { startingCash } from "./config";
+
 // Pure calculations: no database access or market-data requests.
 export interface StatisticsUser {
 	cash: number;
@@ -12,7 +14,6 @@ export interface StatisticsQuote {
 }
 
 export interface Investor {
-	capital: number;
 	value: number;
 	firstTrade: number;
 }
@@ -31,11 +32,7 @@ export function getInvestors(users: StatisticsUser[], quotes: StatisticsQuote[],
 	return users.flatMap(user => {
 		const trades = user.ledger.filter(trade => isTrade(trade) && trade.date <= now);
 		if (!trades.length) return [];
-		// Reverse recorded cash flows rather than assuming every account received today's starting cash.
-		const capital = trades.reduce((cash, trade) => cash + (trade.type === "buy" ? 1 : -1) * trade.price * trade.quantity + (trade.fee ?? 0), user.cash);
-		if (!Number.isFinite(capital) || capital <= 0) return [];
 		return [{
-			capital,
 			value: user.cash + user.positions.reduce((value, position) => value + position.quantity * (prices.get(position.symbol) ?? 0), 0),
 			firstTrade: Math.min(...trades.map(trade => trade.date)),
 		}];
@@ -52,10 +49,10 @@ export function calculateBenchmark(investors: Investor[], history: BenchmarkPric
 		const firstDay = Math.floor(investor.firstTrade / day) * day;
 		const entry = prices.find(point => point.date >= firstDay && point.date < firstDay + 7 * day);
 		if (!entry || !latest) continue;
-		value += investor.capital * latest.close / entry.close;
+		value += startingCash * latest.close / entry.close;
 		coveredInvestors++;
 	}
-	const capital = investors.reduce((total, investor) => total + investor.capital, 0);
+	const capital = investors.length * startingCash;
 	const complete = investors.length > 0 && coveredInvestors === investors.length;
 	return {
 		symbol: history.symbol,
@@ -127,7 +124,7 @@ export function calculateStatistics(users: StatisticsUser[], quotes: StatisticsQ
 		if (active) tradingUsers30++;
 	}
 	const investors = getInvestors(users, quotes, now);
-	const returns = investors.map(investor => (investor.value / investor.capital - 1) * 100).sort((a, b) => a - b);
+	const returns = investors.map(investor => (investor.value / startingCash - 1) * 100).sort((a, b) => a - b);
 	const middle = Math.floor(returns.length / 2);
 	const quoteDates = [...holdings.keys()].flatMap(symbol => bySymbol.get(symbol)?.updatedAt ? [bySymbol.get(symbol)!.updatedAt!.getTime()] : []);
 	return {
@@ -141,7 +138,7 @@ export function calculateStatistics(users: StatisticsUser[], quotes: StatisticsQ
 		returns: {
 			average: returns.length ? returns.reduce((sum, value) => sum + value, 0) / returns.length : null,
 			median: returns.length ? (returns[middle] + returns[Math.floor((returns.length - 1) / 2)]) / 2 : null,
-			capital: investors.reduce((sum, investor) => sum + investor.capital, 0),
+			capital: investors.length * startingCash,
 			value: investors.reduce((sum, investor) => sum + investor.value, 0),
 		},
 		benchmarks: histories.map(history => calculateBenchmark(investors, history)),

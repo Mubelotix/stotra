@@ -1,9 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import User from "../models/user.model";
-import dotenv from "dotenv";
+import { startingCash } from "../utils/config";
 
-dotenv.config();
-const startingCash = process.env.STOTRA_STARTING_CASH || 100_000;
 const usernameHeader = process.env.STOTRA_USERNAME_HEADER || "x-username";
 
 async function getOrCreateUserId(username: string): Promise<string> {

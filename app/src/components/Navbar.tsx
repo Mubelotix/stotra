@@ -77,6 +77,9 @@ export default function Navbar() {
 				>
 					<Text display={{ base: "none", md: "block" }}>Leaderboard</Text>
 				</NavLink>
+				<NavLink to="/statistics" style={({ isActive }) => ({ fontWeight: isActive ? "500" : "" })}>
+					<Text display={{ base: "none", md: "block" }}>Statistics</Text>
+				</NavLink>
 			</Flex>
 
 			{/* Center */}
@@ -168,6 +171,7 @@ export default function Navbar() {
 									<Text as={Link} to="/leaderboard">
 										<Text>Leaderboard</Text>
 									</Text>
+									<Text as={Link} to="/statistics">Statistics</Text>
 								</Stack>
 							</DrawerBody>
 

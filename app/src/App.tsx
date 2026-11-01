@@ -5,6 +5,7 @@ import { Route, Routes } from "react-router-dom";
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const StockView = lazy(() => import("./pages/StockView"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Statistics = lazy(() => import("./pages/Statistics"));
 import NotFound from "./pages/NotFound";
 import Redirect from "./components/Redirect";
 
@@ -51,6 +52,7 @@ function App() {
 							<Route path="/logout" element={<Redirect to="/api/logout" />}></Route>
 
 							<Route path="/leaderboard" element={<Leaderboard />}></Route>
+							<Route path="/statistics" element={<Statistics />}></Route>
 
 							<Route path="/stocks/:symbol" element={<StockView />}></Route>
 

@@ -38,6 +38,8 @@ test("API data routes require proxy authentication before invoking controllers",
 	t.mock.method(User, "find", async () => [{ username: "investor", positions: [], cash: 100 }]);
 	const Quote = require("../dist/src/models/quote.model").default;
 	t.mock.method(Quote, "find", () => ({ lean: async () => [] }));
+	const statisticsController = require("../dist/src/controller/statistics.controller").default;
+	t.mock.method(statisticsController, "getStatistics", (_req, res) => res.json({ aggregate: true }));
 	const app = express();
 	app.use(require("../dist/src/routes"));
 	const server = app.listen(0, "127.0.0.1");
@@ -54,6 +56,10 @@ test("API data routes require proxy authentication before invoking controllers",
 	const leaderboard = await fetch(base + "/api/user/leaderboard");
 	assert.equal(leaderboard.status, 200);
 	assert.deepEqual(await leaderboard.json(), { users: [{ username: "investor", value: 100 }] });
+	assert.equal(lookup.mock.callCount(), 0);
+	const statistics = await fetch(base + "/api/statistics");
+	assert.equal(statistics.status, 200);
+	assert.deepEqual(await statistics.json(), { aggregate: true });
 	assert.equal(lookup.mock.callCount(), 0);
 	for (const [method, path] of routes) {
 		const response = await fetch(base + path, {

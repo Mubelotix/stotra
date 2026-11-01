@@ -31,6 +31,7 @@ This is a fork of the original project. The following changes have been made:
 - Fixed floating point precision issues when selling shares
 - Added rate limits to prevent getting banned by Yahoo Finance
 - Added authentication on endpoints returning data worth crawling
+- Added [a statistics page](https://stotra.dera.page/statistics)
 
 <div align="center">
   <a href="https://github.com/github_username/repo_name">

@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
 	Box,
+	Alert,
+	AlertIcon,
+	Link,
 	Heading,
 	Table,
 	Tag,
@@ -13,6 +16,7 @@ import {
 	Tr,
 	useTheme,
 } from "@chakra-ui/react";
+import { Link as RouterLink } from "react-router-dom";
 
 interface LeaderboardUser {
 	username: string;
@@ -41,6 +45,10 @@ function Leaderboard() {
 
 	return (
 		<Box className="leaderboard">
+			<Alert status="info" borderRadius="lg" mb={6}>
+				<AlertIcon />
+				<Text>Curious what everyone is investing in? <Link as={RouterLink} to="/statistics" fontWeight="bold">Explore the public statistics →</Link></Text>
+			</Alert>
 			<Heading size="lg" mb={4}>
 				Leaderboard
 			</Heading>

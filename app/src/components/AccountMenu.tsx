@@ -10,7 +10,7 @@ function AccountMenu() {
 	useEffect(() => {
 		accounts.getUsername().then((gotUsername) => {
 			setUsername(gotUsername);
-		});
+		}).catch(() => setUsername(""));
 	}, []);
 
 	return (

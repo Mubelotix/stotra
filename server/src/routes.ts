@@ -5,6 +5,7 @@ import userController from "./controller/user.controller";
 import stocksController, { getTradeFee } from "./controller/stocks.controller";
 import newsController from "./controller/news.controller";
 import leaderboardController from "./controller/leaderboard.controller";
+import statisticsController from "./controller/statistics.controller";
 
 // Proxy-managed login and logout routes
 
@@ -27,8 +28,9 @@ router.get("/api/logout", (req, res) => {
 	res.redirect(logoutUrl);
 });
 
-// The leaderboard is public; all other data routes require authentication.
+// Aggregate statistics and the leaderboard are public; personal/market APIs are protected.
 router.get("/api/user/leaderboard", leaderboardController.getLeaderboard);
+router.get("/api/statistics", statisticsController.getStatistics);
 
 // Other data routes require the identity supplied by the trusted authentication proxy.
 router.use("/api", authProxy.verifyToken);

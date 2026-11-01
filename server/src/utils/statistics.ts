@@ -136,6 +136,7 @@ export function calculateStatistics(users: StatisticsUser[], quotes: StatisticsQ
 		holdings: [...holdings.values()].sort((a, b) => b.holders - a.holders || b.value - a.value),
 		trending: [...trending.values()].sort((a, b) => b.bought30 - a.bought30),
 		returns: {
+			positiveShare: returns.length ? returns.filter(value => value > 0).length / returns.length * 100 : null,
 			average: returns.length ? returns.reduce((sum, value) => sum + value, 0) / returns.length : null,
 			median: returns.length ? (returns[middle] + returns[Math.floor((returns.length - 1) / 2)]) / 2 : null,
 			capital: investors.length * startingCash,

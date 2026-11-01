@@ -29,7 +29,7 @@ export interface PublicStatistics {
 	assetClasses: { key: string; label: string; value: number; holders: number; bought30: number; sold30: number; fees30: number }[];
 	holdings: HoldingStatistic[];
 	trending: TrendingStatistic[];
-	returns: { average: number | null; median: number | null; capital: number; value: number };
+	returns: { positiveShare?: number | null; average: number | null; median: number | null; capital: number; value: number };
 	benchmarks: { symbol: string; value: number | null; returnPercent: number | null; coveredInvestors: number; updatedAt: string | null; priceDate: string | null }[];
 	missingPrices: string[];
 	oldestQuoteAt: string | null;

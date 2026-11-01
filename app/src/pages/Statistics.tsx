@@ -136,7 +136,8 @@ function Performance({ data }: { data: PublicStatistics }) {
 	];
 	return <Panel>
 		<Flex justify="space-between" gap={3} wrap="wrap" mb={5}><Box><Heading size="md" mb={2}>Are the strategies paying off?</Heading><Text color="gray.500" fontSize="sm">Lifetime returns for {count(data.investingUsers)} investing users. Accounts that never traded are excluded.</Text></Box><Badge alignSelf="start" colorScheme="purple">After recorded fees</Badge></Flex>
-		<SimpleGrid columns={{ base: 1, sm: 2 }} spacing={6} mb={8}>
+		<SimpleGrid columns={{ base: 1, sm: 3 }} spacing={6} mb={8}>
+			<Box><Text color="gray.500" fontSize="sm">Students with positive returns</Text><Text fontSize="3xl" fontWeight="bold">{data.returns.positiveShare == null ? "Unavailable" : `${data.returns.positiveShare.toFixed(2)}%`}</Text><Text color="gray.500" fontSize="xs">Share of investing students whose portfolio exceeds their initial cash, after fees.</Text></Box>
 			<Box><Text color="gray.500" fontSize="sm">Median investor return</Text><Text fontSize="3xl" fontWeight="bold">{percent(data.returns.median)}</Text><Text color="gray.500" fontSize="xs">The middle investor, not distorted by a few big winners.</Text></Box>
 			<Box><Text color="gray.500" fontSize="sm">Average investor return</Text><Text fontSize="3xl" fontWeight="bold">{percent(data.returns.average)}</Text><Text color="gray.500" fontSize="xs">Each investing account has equal weight.</Text></Box>
 		</SimpleGrid>

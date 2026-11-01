@@ -60,6 +60,23 @@ test("returns use fixed starting cash, exclude idle accounts, and retain investo
 	assert.deepEqual(calculateStatistics(users, quotes, [], now).returns, result.returns);
 });
 
+test("positive return share counts profitable investors, not break-even, losing, idle or future-only accounts", () => {
+	const users = [
+		{ cash: startingCash, positions: [{ symbol: "A", quantity: 1 }], ledger: [trade("buy", "A", 10, 1)] },
+		{ cash: startingCash + 10, positions: [], ledger: [trade("sell", "A", 10, 1)] },
+		{ cash: startingCash, positions: [], ledger: [trade("sell", "A", 10, 1)] },
+		{ cash: startingCash - 10, positions: [], ledger: [trade("buy", "A", 10, 1)] },
+		{ cash: startingCash + 100, positions: [], ledger: [] },
+		{ cash: startingCash + 100, positions: [], ledger: [trade("buy", "A", 10, 1, -1)] },
+	];
+	const result = calculateStatistics(users, [quote("A", 10)], [], now);
+	assert.equal(result.returns.positiveShare, 50);
+	assert.equal(result.returns.capital, 4 * startingCash);
+	assert.equal(calculateStatistics(users.slice(2, 4), [], [], now).returns.positiveShare, 0);
+	assert.equal(calculateStatistics(users.slice(0, 2), [quote("A", 10)], [], now).returns.positiveShare, 100);
+	assert.equal(calculateStatistics(users.slice(4), [], [], now).returns.positiveShare, null);
+});
+
 test("unknown prices count as zero, unknown types are not guessed, and mixed holders count once per class", () => {
 	const user = { cash: 10, positions: [{ symbol: "A", quantity: 1 }, { symbol: "F", quantity: 2 }, { symbol: "BTC-USD", quantity: 1 }, { symbol: "MISSING", quantity: 3 }, { symbol: "ZERO", quantity: 0 }], ledger: [trade("buy", "MISSING", 10, 3)] };
 	const result = calculateStatistics([user], [quote("A", 10), quote("F", 20, "ETF"), quote("BTC-USD", 100, "")], [], now);
@@ -92,6 +109,8 @@ test("empty data, sold-out accounts, old fee-less trades and future transactions
 	const empty = calculateStatistics([], [], [{ symbol: "BTC-USD", prices: [] }], now);
 	assert.equal(empty.returns.median, null);
 	assert.equal(empty.returns.average, null);
+	assert.equal(empty.returns.positiveShare, null);
+	assert.equal(empty.returns.capital, 0);
 	assert.equal(empty.benchmarks[0].value, null);
 	assert.equal(empty.stockValue, 0);
 	const result = calculateStatistics([

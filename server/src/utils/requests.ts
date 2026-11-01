@@ -15,6 +15,26 @@ export const yahooFinance = new YahooFinance({
 const quoteTTL = 60 * 1000;
 const pendingQuotes = new Map<string, Promise<CachedQuote | null>>();
 
+function lastQuoteActivity(quote?: CachedQuote | null): number {
+	return Math.max(quote?.attemptedAt?.getTime() ?? 0, quote?.updatedAt?.getTime() ?? 0);
+}
+
+// Rankings return cached values and reuse the normal refresh path in the background.
+export async function getCachedStockPrices(symbols: string[]): Promise<Map<string, number>> {
+	const quotes = await Quote.find({ _id: { $in: symbols } }).lean();
+	const bySymbol = new Map(quotes.map(quote => [quote._id, quote]));
+	const prices = new Map(symbols.map(symbol => [symbol, bySymbol.get(symbol)?.data?.regularMarketPrice ?? 0]));
+	const staleSymbols = [...new Set(symbols)]
+		.filter(symbol => Date.now() - lastQuoteActivity(bySymbol.get(symbol)) >= quoteTTL)
+		.sort((a, b) => lastQuoteActivity(bySymbol.get(a)) - lastQuoteActivity(bySymbol.get(b)));
+
+	// Keep each page load small. Persisted attempt times rotate failures to the back too.
+	for (const symbol of staleSymbols.slice(0, 10)) {
+		void fetchStockData(symbol).catch(error => console.error("Error refreshing " + symbol + ":", error));
+	}
+	return prices;
+}
+
 export function unknownStockData(symbol: string): StockData {
 	return {
 		symbol,
@@ -29,7 +49,7 @@ export function unknownStockData(symbol: string): StockData {
 
 async function loadQuote(symbol: string): Promise<CachedQuote | null> {
 	const cached = await Quote.findById(symbol).lean();
-	if (cached?.attemptedAt && Date.now() - cached.attemptedAt.getTime() < quoteTTL) {
+	if (Date.now() - lastQuoteActivity(cached) < quoteTTL) {
 		return cached;
 	}
 	if (!await reserveQuoteRefresh()) return cached;

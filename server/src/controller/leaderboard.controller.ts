@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import User from "../models/user.model";
-import Quote from "../models/quote.model";
+import { getCachedStockPrices } from "../utils/requests";
 
 const getLeaderboard = async (_req: Request, res: Response) => {
 	/*
@@ -16,9 +16,7 @@ const getLeaderboard = async (_req: Request, res: Response) => {
 export async function getLeaderboardTopN(n: number): Promise<{ username: string; value: number }[]> {
 	const users = await User.find({}, { username: 1, positions: 1, cash: 1 });
 	const symbols = [...new Set(users.flatMap(user => user.positions.map(position => position.symbol)))];
-	// Never contact Yahoo here: ranks use the last known persisted prices, even if stale.
-	const quotes = await Quote.find({ _id: { $in: symbols } }).lean();
-	const prices = new Map(quotes.map(quote => [quote._id, quote.data?.regularMarketPrice ?? 0]));
+	const prices = await getCachedStockPrices(symbols);
 	const values = users.map(user => ({
 		username: user.username,
 		value: user.positions.reduce(
